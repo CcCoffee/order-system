@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-echo "== Frontend verification =="
+echo "================================"
+echo " Frontend Verification"
+echo "================================"
 
 if [ -f "frontend/package.json" ]; then
     cd frontend
@@ -11,5 +13,6 @@ if [ -f "frontend/package.json" ]; then
     npm run test
     npm run build
 else
-    echo "Frontend project not initialized yet; skipping frontend build."
+    echo "No frontend package.json detected."
+    echo "Frontend verification placeholder."
 fi

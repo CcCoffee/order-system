@@ -1,164 +1,174 @@
-# Order System - Engineering Harness
+# Engineering Harness
 
-## Project
+## Purpose
 
-This is an enterprise order management system.
+This repository is an AI-assisted enterprise software project.
 
-Technology stack:
-
-- Backend: Java + Spring Boot
-- Frontend: React + TypeScript
-- Database: PostgreSQL
-- Cache: Redis
-- API: REST + OpenAPI
-- Browser testing: Playwright
-- Build: Gradle / npm
-- CI: GitHub Actions
+Agents must treat this file as the top-level engineering contract.
 
 ---
 
-# Core Engineering Principles
+# 1. Before Changing Code
 
-## 1. Read before changing
-
-Before modifying code:
+Before modifying any code:
 
 1. Read this file.
-2. Read the relevant directory-level AGENTS.md.
+2. Locate and read the nearest applicable AGENTS.md.
 3. Read relevant architecture documentation.
 4. Search the repository for existing implementations.
 5. Reuse existing abstractions before creating new ones.
+6. Identify affected tests.
+7. Identify API/database compatibility requirements.
 
-Do not create duplicate utilities, services, DTOs, API clients, or infrastructure abstractions.
+Do not start coding immediately after reading only the user request.
 
 ---
 
-# Architecture
+# 2. Architecture Principles
 
-The backend follows:
+Prefer:
 
-Controller
-    ↓
-Application Service
-    ↓
+API
+ ↓
+Application
+ ↓
 Domain
-    ↓
+ ↓
 Infrastructure
 
-Controllers must not directly access repositories.
+Do not bypass architectural layers without a documented reason.
 
-Frontend follows:
+Avoid:
 
-Page
-    ↓
-Feature
-    ↓
-API Client
-    ↓
-Backend API
-
-API contracts are defined by OpenAPI.
+- duplicate abstractions
+- unnecessary frameworks
+- speculative refactoring
+- unrelated cleanup
+- breaking API changes without explicit approval
 
 ---
 
-# Backend Rules
+# 3. API Contract
 
-1. Use Spring Boot conventions.
-2. Controllers must remain thin.
-3. Business logic belongs in application/domain services.
-4. Repository access must not happen inside controllers.
-5. Database changes require Flyway migration.
-6. Never modify production database manually.
-7. API changes must update OpenAPI.
-8. Public APIs require tests.
-9. Do not introduce new frameworks without justification.
-10. Preserve backward compatibility unless the requirement explicitly allows breaking changes.
+OpenAPI is the source of truth for public REST APIs.
 
----
+When an API changes:
 
-# Frontend Rules
+1. Update OpenAPI.
+2. Update backend.
+3. Update frontend client/types.
+4. Update integration tests.
+5. Verify compatibility.
 
-1. Use TypeScript strict mode.
-2. Do not introduce `any` unless explicitly justified.
-3. API DTOs must follow the OpenAPI contract.
-4. Do not manually duplicate backend API models when generated types are available.
-5. Reuse existing components.
-6. Core user flows require Playwright coverage.
-7. Do not introduce a new UI framework without approval.
+Agents must not independently invent API contracts.
 
 ---
 
-# Database Rules
+# 4. Database
 
-All schema changes must be represented as migrations.
+PostgreSQL is the source of truth for persistent business data.
+
+All schema changes require migrations.
 
 Never:
 
 - modify production schema manually
 - delete production data
-- introduce destructive migrations without explicit approval
+- bypass migration tooling
+- introduce destructive changes without explicit approval
 
 ---
 
-# Testing Rules
+# 5. Testing
 
-Every feature should have the smallest appropriate test set:
+Use the smallest appropriate verification level:
 
-- Unit test
-- Integration test
-- API contract test
-- E2E test when user-visible
+Unit
+ ↓
+Integration
+ ↓
+API Contract
+ ↓
+E2E
+
+User-visible behavior should have E2E coverage where practical.
 
 ---
 
-# Verification
+# 6. Verification
 
-Before considering a task complete:
+Before declaring a task complete:
 
     ./scripts/verify.sh
 
-A task is NOT complete merely because the code compiles.
+A successful compilation is NOT sufficient evidence.
 
-The agent must provide evidence that verification passed.
+The final response must report:
+
+- implementation summary
+- files changed
+- tests executed
+- verification result
+- known risks
 
 ---
 
-# Definition of Done
+# 7. Definition of Done
 
 A task is complete only when:
 
-1. Requirement is implemented.
-2. Existing behavior is preserved.
-3. Relevant tests pass.
-4. API contract is valid.
-5. Frontend builds.
-6. Integration tests pass.
-7. E2E tests pass when applicable.
-8. Documentation is updated when architecture/API behavior changes.
-9. No unnecessary dependencies are introduced.
-10. `./scripts/verify.sh` passes.
+- requirement implemented
+- architecture respected
+- tests updated
+- relevant tests pass
+- API contract valid
+- database migration valid
+- frontend builds
+- E2E passes where applicable
+- no unrelated changes introduced
+- full verification passes
 
 ---
 
-# Agent Behavior
+# 8. Agent Behavior
 
 Agents should:
 
 - inspect before editing
-- make the smallest reasonable change
+- make minimal changes
 - reuse existing patterns
-- avoid speculative refactoring
-- avoid unrelated changes
-- run targeted tests first
-- run full verification before completion
+- preserve compatibility
+- verify their changes
+- fix failures instead of bypassing them
 
-When verification fails:
+Agents must NOT:
 
-1. inspect the failure
-2. identify the root cause
-3. fix the implementation
-4. rerun the failed check
-5. continue until verification passes or a blocking issue is documented
+- disable tests
+- weaken validation merely to make tests pass
+- remove failing assertions without justification
+- silently change requirements
+- make unrelated refactors
 
-Do not hide or bypass failing tests.
+---
 
+# 9. Evidence
+
+Do not say:
+
+"Implemented successfully."
+
+Instead provide evidence:
+
+Command:
+    ./scripts/verify.sh
+
+Result:
+    PASS
+
+Tests:
+    128 passed
+
+E2E:
+    14 passed
+
+The repository state and verification output are the source of truth.

@@ -4,37 +4,37 @@
 
 TASK-XXXX
 
-## Requirement Coverage
+## Requirement
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Backend
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Frontend
 
-- PASS / FAIL
+PASS / FAIL
 
 ## API Contract
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Database
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Security
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Regression
 
-- PASS / FAIL
+PASS / FAIL
 
 ## E2E
 
-- PASS / FAIL
+PASS / FAIL
 
 ## Final Verdict
 

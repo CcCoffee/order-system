@@ -1,32 +1,67 @@
 # Frontend Engineering Rules
 
-## Stack
+This directory contains the React frontend.
+
+---
+
+# Stack
 
 - React
 - TypeScript
 - Vite
 - Playwright
 
-## Rules
+---
 
-- TypeScript strict mode.
-- Avoid `any`.
-- Reuse existing components.
-- Keep business logic outside presentation components where practical.
-- API communication must use the shared API client.
-- Do not manually duplicate API contracts.
-- Handle loading, empty, error and success states.
-- User-visible critical flows require E2E coverage.
+# Rules
 
-## Verification
+Use TypeScript strict mode.
+
+Avoid `any`.
+
+Reuse existing components.
+
+Do not introduce a new UI framework without approval.
+
+API contracts must follow OpenAPI.
+
+Do not invent backend API shapes.
+
+---
+
+# State
+
+Follow the existing project state-management architecture.
+
+Do not introduce another state-management library without explicit justification.
+
+---
+
+# UI
+
+Every important user flow should handle:
+
+- loading
+- success
+- empty
+- error
+
+---
+
+# E2E
+
+Critical user-visible flows should have Playwright coverage.
+
+---
+
+# Verification
 
 Run:
 
-npm run lint
-npm run test
-npm run build
+    npm run lint
 
-For user flows:
+    npm run test
 
-npm run e2e
+    npm run build
 
+    npm run e2e

@@ -2,10 +2,8 @@
 
 set -euo pipefail
 
-echo "== Integration tests =="
+echo "================================"
+echo " Integration Tests"
+echo "================================"
 
-if [ -d "tests/integration" ]; then
-    echo "Integration test directory exists."
-fi
-
-echo "Integration test runner should be implemented here."
+echo "Integration test runner not initialized yet."

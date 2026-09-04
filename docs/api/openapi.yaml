@@ -11,7 +11,7 @@ paths:
       summary: Create order
       responses:
         '201':
-          description: Order created
+          description: Created
 
   /api/orders/{orderId}/cancel:
     post:
@@ -24,7 +24,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Order cancelled
+          description: Cancelled
         '404':
           description: Order not found
         '409':

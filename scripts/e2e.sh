@@ -2,10 +2,8 @@
 
 set -euo pipefail
 
-echo "== E2E tests =="
+echo "================================"
+echo " E2E Tests"
+echo "================================"
 
-if [ -d "tests/e2e" ]; then
-    echo "Playwright E2E suite detected."
-fi
-
-echo "Playwright runner should be implemented here."
+echo "Playwright runner not initialized yet."

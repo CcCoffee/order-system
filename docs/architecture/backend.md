@@ -1,35 +1,13 @@
 # Backend Architecture
 
-Spring Boot services follow:
-
-API
- ↓
-Application
- ↓
+Controller
+    |
+Application Service
+    |
 Domain
- ↓
+    |
 Infrastructure
 
-API layer:
+Controllers do not access repositories directly.
 
-- REST controllers
-- request/response DTOs
-- validation
-
-Application layer:
-
-- use cases
-- transactions
-- orchestration
-
-Domain:
-
-- business rules
-- domain objects
-- state transitions
-
-Infrastructure:
-
-- PostgreSQL
-- Redis
-- external services
+Transactions normally belong at application-service boundaries.

@@ -1,34 +1,16 @@
 # Order System Architecture
 
-## Logical Architecture
-
 React Frontend
-    ↓
+      |
+      v
 API Gateway
-    ↓
+      |
+      v
 Order Service
-    ├── PostgreSQL
-    ├── Redis
-    └── Event Bus
+   |       |
+   v       v
+PostgreSQL Redis
 
-## Core Domain
+Order Service owns the Order domain.
 
-The system manages:
-
-- Users
-- Products
-- Orders
-- Payments
-
-## Order Lifecycle
-
-PENDING
-    ↓
-PAID
-    ↓
-SHIPPED
-    ↓
-COMPLETED
-
-Cancellation is allowed only for states explicitly defined by the business rules.
-
+OpenAPI defines external API contracts.

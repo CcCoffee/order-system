@@ -1,18 +1,13 @@
 # Task
 
-## ID
-
-TASK-XXXX
+ID:
 
 ## Requirement
-
-Describe the user/business requirement.
 
 ## Acceptance Criteria
 
 - [ ] AC-001
 - [ ] AC-002
-- [ ] AC-003
 
 ## Backend
 
@@ -34,16 +29,10 @@ Describe the user/business requirement.
 - [ ] Integration
 - [ ] API
 - [ ] E2E
-- [ ] Full harness
+- [ ] Full Harness
 
 ## Evidence
 
-Record commands and results.
-
 ## Risks
 
-Record known risks.
-
 ## Status
-
-PLANNED

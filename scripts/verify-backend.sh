@@ -2,10 +2,13 @@
 
 set -euo pipefail
 
-echo "== Backend verification =="
+echo "================================"
+echo " Backend Verification"
+echo "================================"
 
 if [ -f "./gradlew" ]; then
     ./gradlew test
 else
-    echo "Gradle project not initialized yet; skipping backend build."
+    echo "No Gradle project detected."
+    echo "Backend verification placeholder."
 fi

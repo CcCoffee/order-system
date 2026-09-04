@@ -1,27 +1,20 @@
 # Order System
 
-Enterprise Spring Boot + React order management system.
+Enterprise Spring Boot + React example project.
 
-## Engineering Harness
+## AI Engineering Harness
 
-This repository is designed for AI-assisted software engineering.
-
-Core components:
+This repository uses:
 
 - AGENTS.md
-- GitHub Custom Agents
-- Automated verification
-- OpenAPI contract
-- Integration tests
-- Playwright E2E
-- Independent review
-- Harness task state
-
-## Verification
-
-Run:
-
-    ./scripts/verify.sh
+- GitHub Copilot Custom Agents
+- Conditional Instructions
+- Automated Verification
+- OpenAPI
+- Integration Tests
+- E2E Tests
+- Independent Evaluation
+- GitHub Actions
 
 ## Agent Roles
 
@@ -30,14 +23,29 @@ Run:
 - Frontend Engineer
 - Test Engineer
 - Code Reviewer
-- Security Reviewer
 
-## Principle
+## Verification
 
-Human defines intent and constraints.
+Run:
 
-Agents implement and verify.
+    ./scripts/verify.sh
 
-CI provides objective evidence.
+## Engineering Principle
 
-Human performs final approval.
+Humans define:
+
+- requirements
+- architecture
+- constraints
+- acceptance criteria
+
+Agents perform:
+
+- investigation
+- implementation
+- testing
+- verification
+
+CI provides independent evidence.
+
+Humans approve the final change.

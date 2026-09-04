@@ -1,58 +1,104 @@
 # Backend Engineering Rules
 
-## Architecture
+This directory contains Spring Boot backend services.
 
-Spring Boot backend uses:
+---
+
+# Architecture
+
+Use:
 
 Controller
-    ↓
+ ↓
 Application Service
-    ↓
+ ↓
 Domain
-    ↓
+ ↓
 Infrastructure
 
-## Package Structure
+Controllers must not directly access repositories.
 
-Prefer:
+---
 
-com.company.orders
-├── api
-├── application
-├── domain
-├── infrastructure
-└── configuration
+# API
 
-## Rules
+Controllers are responsible for:
 
-- Controllers handle HTTP concerns only.
-- Application services coordinate use cases.
-- Domain contains business rules.
-- Infrastructure contains database/external integrations.
-- Repository interfaces belong to the appropriate abstraction layer.
-- Avoid leaking persistence entities into API responses.
-- Use explicit DTOs.
-- Validate input at API boundaries.
-- Use global exception handling.
-- Use transactions at application-service boundaries.
+- HTTP concerns
+- request validation
+- response mapping
 
-## Database
+Business logic belongs in application/domain layers.
 
-PostgreSQL is the source of truth.
+Use explicit request/response DTOs.
 
-Every schema modification requires a Flyway migration.
+Do not expose persistence entities directly.
 
-## Redis
+---
 
-Redis is used only for caching and short-lived state.
+# Application
 
-Cache invalidation must be explicit when mutable domain state changes.
+Application services coordinate use cases.
 
-## Testing
+Transactions should normally be defined at application-service boundaries.
 
-Service/domain logic should have unit tests.
+---
+
+# Domain
+
+Domain code contains business rules and state transitions.
+
+Avoid placing business rules inside:
+
+- controllers
+- repositories
+- DTOs
+
+---
+
+# Infrastructure
+
+Infrastructure contains:
+
+- PostgreSQL
+- Redis
+- external APIs
+- messaging
+- persistence implementations
+
+---
+
+# Database
+
+Use Flyway migrations.
+
+Never modify production schema manually.
+
+---
+
+# Redis
+
+Redis is used for:
+
+- caching
+- short-lived state
+
+Cache invalidation must be considered whenever mutable domain state changes.
+
+---
+
+# Testing
+
+Business logic requires unit tests.
 
 Database behavior requires integration tests.
 
-Public APIs require API/integration tests.
+Public APIs require integration/API tests.
 
+---
+
+# Verification
+
+Run:
+
+    ./scripts/verify-backend.sh
