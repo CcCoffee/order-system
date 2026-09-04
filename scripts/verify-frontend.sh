@@ -2,17 +2,32 @@
 
 set -euo pipefail
 
-echo "================================"
-echo " Frontend Verification"
-echo "================================"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-if [ -f "frontend/package.json" ]; then
-    cd frontend
+cd "$ROOT/frontend"
 
-    npm run lint
-    npm run test
-    npm run build
-else
-    echo "No frontend package.json detected."
-    echo "Frontend verification placeholder."
+echo "Checking React frontend..."
+
+if [[ ! -f package.json ]]; then
+    echo "ERROR: frontend/package.json not found."
+    exit 1
 fi
+
+if [[ ! -d node_modules ]]; then
+    echo "Installing frontend dependencies..."
+
+    npm install
+fi
+
+echo
+echo "Running frontend tests..."
+
+npm test -- --run
+
+echo
+echo "Running frontend build..."
+
+npm run build
+
+echo
+echo "Frontend verification OK."

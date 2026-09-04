@@ -2,8 +2,30 @@
 
 set -euo pipefail
 
-echo "================================"
-echo " Integration Tests"
-echo "================================"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "Integration test runner not initialized yet."
+cd "$ROOT/backend"
+
+echo "Running integration tests..."
+
+if [[ -f "./mvnw" ]]; then
+
+    chmod +x ./mvnw
+
+    ./mvnw test \
+        -Dgroups=integration
+
+elif [[ -f "pom.xml" ]]; then
+
+    mvn test \
+        -Dgroups=integration
+
+else
+
+    echo "ERROR: Maven project not found."
+    exit 1
+
+fi
+
+echo
+echo "Integration tests OK."
