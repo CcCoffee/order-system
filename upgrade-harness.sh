@@ -2,39 +2,60 @@
 
 set -euo pipefail
 
-echo "=============================================="
-echo " Order System - Harness Evaluation Setup"
-echo "=============================================="
+echo "======================================================"
+echo " Order System - Harness Upgrade"
+echo "======================================================"
 
 ROOT="$(pwd)"
 
 if [[ ! -f "$ROOT/AGENTS.md" ]]; then
   echo "ERROR: AGENTS.md not found."
-  echo "Please run this script from the order-system root directory."
+  echo "Run this script from the order-system root directory."
   exit 1
 fi
 
 echo
-echo "[1/7] Creating directories..."
+echo "[1/8] Checking project structure..."
 
 mkdir -p \
+  backend \
+  frontend \
   infra/docker \
   scripts \
-  .harness/evaluations \
-  .harness/tasks \
-  .harness/state \
-  .harness/reports \
   docs/architecture \
   docs/api \
-  docs/database
+  docs/database \
+  .harness/evaluations \
+  .harness/tasks \
+  .harness/reports \
+  .harness/state \
+  .github/agents \
+  .github/instructions \
+  .vscode
 
 
 # ============================================================
-# 1. Docker infrastructure
+# 2. VS Code / Copilot configuration
 # ============================================================
 
 echo
-echo "[2/7] Creating Docker infrastructure..."
+echo "[2/8] Configuring VS Code / GitHub Copilot..."
+
+cat > .vscode/settings.json <<'EOF'
+{
+  "chat.useAgentsMdFile": true,
+  "chat.useNestedAgentsMdFiles": true,
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true
+}
+EOF
+
+
+# ============================================================
+# 3. Docker infrastructure
+# ============================================================
+
+echo
+echo "[3/8] Configuring Docker infrastructure..."
 
 cat > infra/docker/docker-compose.yml <<'EOF'
 services:
@@ -84,14 +105,13 @@ EOF
 cat > infra/docker/README.md <<'EOF'
 # Local Infrastructure
 
-The Order System uses the following local infrastructure.
+The local development environment uses Docker Compose.
 
 ## PostgreSQL
-
-PostgreSQL is expected to already be installed/running on the host.
 
 ```text
 host: localhost
 port: 5433
 database: order_system
 username: postgres
+password: 123456
