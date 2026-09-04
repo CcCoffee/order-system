@@ -65,7 +65,7 @@ services:
     container_name: order-system-postgres
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       POSTGRES_DB: order_system
       POSTGRES_USER: postgres
@@ -83,7 +83,7 @@ services:
     container_name: order-system-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     command:
@@ -111,7 +111,7 @@ The local development environment uses Docker Compose.
 
 ```text
 host: localhost
-port: 5433
+port: 5434
 database: order_system
 username: postgres
 password: 123456
@@ -121,7 +121,7 @@ password: 123456
 
 ```text
 host: localhost
-port: 6379
+port: 6380
 ```
 
 ## Startup

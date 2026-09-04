@@ -6,7 +6,7 @@ The local development environment uses Docker Compose.
 
 ```text
 host: localhost
-port: 5433
+port: 5434
 database: order_system
 username: postgres
 password: 123456
@@ -16,7 +16,7 @@ password: 123456
 
 ```text
 host: localhost
-port: 6379
+port: 6380
 ```
 
 ## Startup

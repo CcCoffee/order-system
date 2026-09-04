@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/order_system
+    username: postgres
+    password: "123456"
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: localhost
+      port: 6380
+
+server:
+  port: 8083
+
+logging:
+  level:
+    com.example.orderservice: INFO
