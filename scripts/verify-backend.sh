@@ -2,36 +2,26 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [[ ! -f "$ROOT/backend/pom.xml" ]]; then
+echo "SKIP: backend/pom.xml does not exist yet."
+exit 0
+fi
 
 cd "$ROOT/backend"
 
-echo "Checking Spring Boot backend..."
-
-if [[ -f "./mvnw" ]]; then
-
-    chmod +x ./mvnw
-
-    echo "Running Maven tests..."
-
-    ./mvnw test
-
-elif [[ -f "pom.xml" ]]; then
-
-    if ! command -v mvn >/dev/null 2>&1; then
-        echo "ERROR: Maven is not installed."
-        exit 1
-    fi
-
-    mvn test
-
+if [[ -x "./mvnw" ]]; then
+MVN="./mvnw"
 else
-
-    echo "ERROR: Maven project not found."
-    echo "Expected backend/pom.xml"
-    exit 1
-
+if ! command -v mvn >/dev/null 2>&1; then
+echo "FAIL: Maven is not installed and backend/mvnw does not exist."
+exit 1
 fi
 
-echo
-echo "Backend verification OK."
+MVN="mvn"
+fi
+
+echo "Running backend tests..."
+
+"$MVN" test

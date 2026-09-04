@@ -1,16 +1,63 @@
 ---
-name: Backend Standards
-description: Apply enterprise Spring Boot standards to backend code.
 applyTo: "backend/**/*.java"
 ---
 
-# Spring Boot Standards
+# Backend Engineering Rules
 
-- Keep controllers thin.
-- Put business logic in application/domain services.
-- Do not access repositories directly from controllers.
-- Use explicit DTOs.
-- Validate request boundaries.
-- Use the existing exception handling mechanism.
-- Do not introduce new frameworks without justification.
-- Add tests for behavior changes.
+## Architecture
+
+The backend follows:
+
+Controller
+    ↓
+Application Service
+    ↓
+Domain
+    ↓
+Repository
+    ↓
+Infrastructure
+
+Rules:
+
+- Controllers handle HTTP concerns only.
+- Controllers must not contain business logic.
+- Controllers must not directly access repositories.
+- Application services coordinate use cases.
+- Domain objects contain business invariants.
+- Repository interfaces belong to the appropriate application/domain layer.
+- Persistence implementation belongs to infrastructure.
+- Do not expose JPA entities directly as API contracts.
+
+## Transactions
+
+Business operations that must be atomic must use explicit transactions.
+
+Examples:
+
+- creating an order
+- reserving inventory
+- cancelling an order
+- releasing inventory
+- writing related audit records
+
+Do not split an operation across multiple independently committed transactions when doing so can violate a business invariant.
+
+## Error Handling
+
+Use explicit domain/application errors.
+
+Do not silently swallow exceptions.
+
+API error responses should be deterministic and documented.
+
+## Testing
+
+Every important business invariant must have automated tests.
+
+Prefer:
+
+- unit tests for domain rules
+- integration tests for database/Redis behavior
+- API tests for HTTP contracts
+- E2E tests for critical user journeys

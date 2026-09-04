@@ -172,3 +172,66 @@ E2E:
     14 passed
 
 The repository state and verification output are the source of truth.
+
+# Harness Engineering Governance
+This repository uses a repository-native Harness to evaluate AI-assisted software development.
+
+## Canonical verification
+The canonical verification command is:
+
+./scripts/verify.sh
+
+An implementation task is complete only when this command returns exit code 0.
+
+## Evaluation ownership
+The following directories contain evaluation contracts:
+
+- .harness/evaluations/
+- .harness/tasks/
+During normal implementation these files are read-only.
+
+Agents must not modify evaluation criteria merely to make an implementation pass.
+
+## Verification ownership
+Verification scripts are executable engineering contracts.
+
+Agents must not:
+
+- disable verification
+- remove verification steps
+- weaken assertions
+- hide failures
+- change verification behavior merely to make a task pass
+- delete tests to avoid failures
+
+## Failure recovery
+When verification fails:
+
+1. read the failure
+2. identify the root cause
+3. fix the implementation
+4. run verification again
+5. repeat until passing
+Do not bypass a failing verification step.
+
+## Engineering principle
+Tests and verification are feedback mechanisms, not obstacles.
+
+The preferred development loop is:
+
+Read
+↓
+Understand
+↓
+Implement
+↓
+Verify
+↓
+Diagnose
+↓
+Fix
+↓
+Verify again
+
+## Definition of done
+A task is complete only when the implementation satisfies the evaluation criteria and the canonical verification command passes.

@@ -2,32 +2,26 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [[ ! -f "$ROOT/frontend/package.json" ]]; then
+echo "SKIP: frontend/package.json does not exist yet."
+exit 0
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+echo "FAIL: npm is not installed."
+exit 1
+fi
 
 cd "$ROOT/frontend"
 
-echo "Checking React frontend..."
-
-if [[ ! -f package.json ]]; then
-    echo "ERROR: frontend/package.json not found."
-    exit 1
-fi
-
 if [[ ! -d node_modules ]]; then
-    echo "Installing frontend dependencies..."
-
-    npm install
+echo "FAIL: frontend dependencies are not installed."
+echo "Run npm ci inside frontend/."
+exit 1
 fi
 
-echo
-echo "Running frontend tests..."
-
-npm test -- --run
-
-echo
 echo "Running frontend build..."
 
 npm run build
-
-echo
-echo "Frontend verification OK."

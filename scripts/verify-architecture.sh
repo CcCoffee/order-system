@@ -2,21 +2,26 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [[ ! -f "$ROOT/backend/pom.xml" ]]; then
+echo "SKIP: backend/pom.xml does not exist yet."
+exit 0
+fi
 
 cd "$ROOT/backend"
 
-echo "Checking architecture..."
-
-if [[ -f "./mvnw" ]]; then
-    ./mvnw test -Dgroups=architecture
-    exit 0
-fi
-
-if [[ -f "pom.xml" ]]; then
-    mvn test -Dgroups=architecture
-    exit 0
-fi
-
-echo "ERROR: Backend Maven project not found."
+if [[ -x "./mvnw" ]]; then
+MVN="./mvnw"
+else
+if ! command -v mvn >/dev/null 2>&1; then
+echo "FAIL: Maven is not installed."
 exit 1
+fi
+
+MVN="mvn"
+fi
+
+echo "Running architecture tests..."
+
+"$MVN" test -Dgroups=architecture

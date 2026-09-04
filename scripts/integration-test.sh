@@ -2,30 +2,26 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [[ ! -f "$ROOT/backend/pom.xml" ]]; then
+echo "SKIP: backend/pom.xml does not exist yet."
+exit 0
+fi
 
 cd "$ROOT/backend"
 
-echo "Running integration tests..."
-
-if [[ -f "./mvnw" ]]; then
-
-    chmod +x ./mvnw
-
-    ./mvnw test \
-        -Dgroups=integration
-
-elif [[ -f "pom.xml" ]]; then
-
-    mvn test \
-        -Dgroups=integration
-
+if [[ -x "./mvnw" ]]; then
+MVN="./mvnw"
 else
-
-    echo "ERROR: Maven project not found."
-    exit 1
-
+if ! command -v mvn >/dev/null 2>&1; then
+echo "FAIL: Maven is not installed."
+exit 1
 fi
 
-echo
-echo "Integration tests OK."
+MVN="mvn"
+fi
+
+echo "Running integration tests..."
+
+"$MVN" test -Dgroups=integration

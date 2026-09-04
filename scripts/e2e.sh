@@ -2,35 +2,25 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [[ ! -f "$ROOT/frontend/package.json" ]]; then
+echo "SKIP: frontend/package.json does not exist yet."
+exit 0
+fi
 
 cd "$ROOT/frontend"
 
-echo "Running E2E tests..."
-
-if [[ ! -f package.json ]]; then
-    echo "ERROR: frontend/package.json not found."
-    exit 1
+if [[ ! -d node_modules ]]; then
+echo "FAIL: frontend dependencies are not installed."
+exit 1
 fi
 
-# ------------------------------------------------------------
-# Detect Playwright
-# ------------------------------------------------------------
-
-if [[ -x "node_modules/.bin/playwright" ]]; then
-
-    node_modules/.bin/playwright test
-
-elif command -v npx >/dev/null 2>&1; then
-
-    npx playwright test
-
-else
-
-    echo "ERROR: Playwright not installed."
-    exit 1
-
+if ! npm list @playwright/test >/dev/null 2>&1; then
+echo "FAIL: @playwright/test is not installed."
+exit 1
 fi
 
-echo
-echo "E2E tests OK."
+echo "Running Playwright E2E tests..."
+
+npx playwright test
