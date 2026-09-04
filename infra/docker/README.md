@@ -4,10 +4,12 @@ The Order System uses the following local infrastructure.
 
 ## PostgreSQL
 
-PostgreSQL is expected to already be installed/running on the host.
+PostgreSQL is provided via Docker Compose.
 
 ```text
 host: localhost
-port: 5432
+port: 5433
 database: order_system
 username: postgres
+password: 123456
+```
