@@ -1,6 +1,6 @@
 ---
 name: evaluation-author
-description: Create and review high-quality Harness Evaluation specifications that are behavior-focused, independently testable, evidence-driven, and resistant to weak test implementations.
+description: Create and review high-quality Harness Evaluation specifications that are behavior-focused, independently testable, evidence-driven, and resistant to weak test implementations, and author a matching Task for each Evaluation.
 ---
 
 # Evaluation Author
@@ -22,6 +22,9 @@ You define:
 - required test level
 - regression expectations
 - forbidden shortcuts
+
+You also author a matching Task (`.harness/tasks/`) that tells an
+implementation agent what to build to satisfy the Evaluation.
 
 The Evaluation must be strong enough that an incorrect implementation
 cannot easily pass by adding a superficial test.
@@ -183,6 +186,63 @@ Every Evaluation should contain:
 
 ---
 
+# Paired Task
+
+An Evaluation defines what is correct. A Task defines what to build. In this
+Harness they are separate but paired artifacts:
+
+- `.harness/evaluations/<NNN>-<slug>.md` — the behavioral contract.
+- `.harness/tasks/<NNN>-<slug>.prompt.md` — the build prompt for an agent.
+
+For every Evaluation, author a matching Task in `.harness/tasks/`.
+
+## Coupling
+
+The relationship is one-directional:
+
+```text
+Task  →  references  →  Evaluation
+```
+
+A Task must reference its Evaluation by file path (for example
+`.harness/evaluations/006-...md`). An Evaluation generally does not reference
+its Task; it is the standalone source of truth for correctness.
+
+## Task Structure
+
+A Task is an executable prompt, not a contract. Follow the repository task
+style (prose prompt). Include:
+
+1. Title: `# Task NNN — <what to build>`
+2. **Read:** the files an agent must read first, including:
+   - `AGENTS.md`
+   - `.github/instructions/` for the relevant layer
+   - `.github/agents/order-system.agent.md`
+   - the paired `.harness/evaluations/<NNN>-<slug>.md`
+3. **Requirement:** a short description of what to implement, scoped to the
+   Evaluation.
+4. **Tests:** the tests required to produce the Evaluation's evidence,
+   mirroring its `Required Tests` and `Required Evidence`.
+5. **Constraints:** what the agent must not do (weaken/delete tests, modify
+   Evaluation criteria, modify verification scripts, duplicate business
+   rules, etc.).
+6. **Verification:** run `./scripts/verify.sh` until it passes.
+7. **Completion:** the Task is complete only when `./scripts/verify.sh`
+   exits with code 0.
+
+## Scope Match
+
+The Task must not expand or shrink the Evaluation's scope. Do not:
+
+- add requirements to the Task that are absent from the Evaluation
+- omit Evaluation acceptance criteria from the Task's tests
+- change the Evaluation to match a convenience in the Task
+
+If the Task and Evaluation drift, reconcile them before implementation
+begins.
+
+---
+
 # Acceptance Criteria
 
 Use stable identifiers:
@@ -319,6 +379,9 @@ Before finalizing an Evaluation, verify:
 - [ ] Verification requirement exists
 - [ ] Forbidden shortcuts are defined
 - [ ] Implementation details are not unnecessarily prescribed
+- [ ] A matching Task is created in `.harness/tasks/`
+- [ ] The Task references the Evaluation by file path
+- [ ] Task scope matches the Evaluation scope
 
 ---
 
@@ -334,3 +397,6 @@ Every acceptance criterion
 
 If the Evaluation cannot be objectively verified, improve the Evaluation
 before allowing implementation to begin.
+
+The Evaluation is not done until its matching Task is also authored, the
+Task references the Evaluation, and the Task scope matches the Evaluation.
