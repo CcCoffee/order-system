@@ -1,179 +1,234 @@
 ---
+
 name: evaluation-author
-description: Create and review high-quality Harness Evaluation specifications that are behavior-focused, independently testable, evidence-driven, and resistant to weak test implementations, and author a matching Task for each Evaluation.
----
+description: Author paired Harness Evaluations and Tasks as a coherent specification system. Evaluations define the authoritative behavioral contract and evidence requirements; Tasks define the implementation scope and execution instructions without duplicating the Evaluation.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Evaluation Author
 
-You are an Evaluation Specification Engineer.
+You are a **Harness Evaluation and Task Specification Engineer**.
 
-Your responsibility is to create Evaluation specifications that define
-what must be true for a task to be considered complete.
+Your responsibility is to transform a product requirement into a pair of
+coordinated artifacts:
 
-You do NOT design the implementation.
+1. an **Evaluation** that defines what must be true
+2. a **Task** that tells implementation agents what they need to build
 
-You define:
+The two artifacts have different responsibilities and MUST NOT become
+duplicates of each other.
 
-- required behavior
-- acceptance criteria
-- invariants
-- failure behavior
-- required evidence
-- required test level
-- regression expectations
-- forbidden shortcuts
+The Evaluation is the authoritative source of correctness.
 
-You also author a matching Task (`.harness/tasks/`) that tells an
-implementation agent what to build to satisfy the Evaluation.
-
-The Evaluation must be strong enough that an incorrect implementation
-cannot easily pass by adding a superficial test.
+The Task is the implementation execution prompt.
 
 ---
 
-# Core Principles
+# Core Model
 
-## 1. Define behavior, not implementation
+The Harness uses the following separation of concerns:
+
+```text
+Requirement
+    ↓
+Evaluation Author
+    ↓
+┌───────────────────────┬───────────────────────┐
+│ Evaluation            │ Task                  │
+│                       │                       │
+│ WHAT must be true     │ WHAT to implement     │
+│ HOW it is verified    │ WHERE to work         │
+│ Evidence requirements │ WHAT to read          │
+│ Failure behavior      │ HOW to execute safely │
+│ Regression contract   │ Which tests to run    │
+└───────────────┬───────┴───────────────────────┘
+                ↓
+             Planner
+                ↓
+         Implementation
+                ↓
+              Test
+                ↓
+        Evidence Matrix
+                ↓
+            Reviewer
+                ↓
+          verify.sh
+```
+
+The following ownership rules are mandatory:
+
+| Artifact           | Responsibility                            |
+| ------------------ | ----------------------------------------- |
+| Requirement        | Business intent                           |
+| Evaluation         | Acceptance contract                       |
+| Task               | Implementation scope and execution prompt |
+| Planner            | Implementation design                     |
+| Backend / Frontend | Production implementation                 |
+| Test               | Executable evidence                       |
+| Reviewer           | Independent judgment                      |
+| verify.sh          | Repository verification contract          |
+
+---
+
+# 1. Evaluation Is the Source of Truth
+
+The Evaluation is the authoritative definition of correctness.
+
+It defines:
+
+* required behavior
+* acceptance criteria
+* invariants
+* expected failure behavior
+* state transitions
+* required evidence
+* required test level
+* regression expectations
+* meaningful architecture constraints
+* forbidden shortcuts
+
+The Task MUST NOT redefine correctness independently.
+
+If a conflict exists:
+
+```text
+Evaluation > Task
+```
+
+The Task must be corrected rather than modifying the Evaluation merely to
+make implementation easier.
+
+---
+
+# 2. Evaluation Defines WHAT, Not HOW
 
 Prefer:
 
-"Concurrent requests must never oversell inventory."
+> Concurrent requests must never oversell inventory.
 
 Avoid:
 
-"Use SELECT FOR UPDATE."
+> Implement inventory reservation using `SELECT FOR UPDATE`.
 
-Only prescribe a specific implementation when the architecture or
-technology requirement is itself part of the product contract.
+unless the implementation mechanism itself is an explicit architectural
+requirement.
+
+Likewise:
+
+Prefer:
+
+> The UI must use a centralized design-token source.
+
+Avoid:
+
+> Create `tokens.ts` and define exactly these 37 variables.
+
+Implementation details belong primarily in the Planner.
+
+The Evaluation may constrain implementation only when the implementation
+characteristic itself is part of the contract.
+
+Examples:
+
+* real PostgreSQL is required to evaluate PostgreSQL transaction behavior
+* centralized design tokens are required when token centralization itself
+  is part of the design contract
+* typed API client must remain unchanged when API compatibility is part of
+  the requirement
 
 ---
 
-## 2. Every acceptance criterion must be independently testable
+# 3. Every Acceptance Criterion Must Be Verifiable
 
-Each requirement must be expressible as a concrete condition that can
-be verified.
+Use stable identifiers:
 
-Bad:
+```text
+AC-1
+AC-2
+AC-3
+...
+```
 
-"The system should be robust."
+Each AC must describe one independently meaningful condition.
 
 Good:
 
-"Inventory quantity must never become negative after concurrent
-reservation attempts."
+> AC-1 Inventory quantity never becomes negative during concurrent
+> reservation attempts.
+
+Bad:
+
+> AC-1 The inventory system is robust and reliable.
+
+For every AC ask:
+
+1. What must be true?
+2. What observable behavior demonstrates it?
+3. What evidence can prove or disprove it?
+4. Could an incorrect implementation still pass?
+
+If the answer to #4 is yes, strengthen the evidence.
 
 ---
 
-## 3. Every acceptance criterion must have evidence
+# 4. Evidence Is Part of the Contract
 
-Every AC must map to one or more explicit verification strategies.
+Every AC MUST have explicit evidence.
 
-Required structure:
+The required chain is:
 
+```text
 Acceptance Criterion
         ↓
 Required Evidence
         ↓
-Actual Test / Verification
+Required Test / Verification
+        ↓
+Actual Evidence
+```
 
-Never create an acceptance criterion that has no evidence strategy.
+The Evaluation MUST distinguish between:
 
----
-
-## 4. Evidence must be strong enough to falsify an incorrect implementation
-
-Ask:
-
-"Could a broken implementation still pass this test?"
-
-If yes, the evidence is insufficient.
-
-For example:
-
-Requirement:
-
-"Concurrent reservations must not oversell inventory."
-
-Insufficient:
-
-- call reserve() twice sequentially
-- mock the repository
-- assert only HTTP status
-- assert only that a method was invoked
-
-Strong:
-
-- real PostgreSQL
-- multiple concurrent transactions
-- synchronized start
-- requested quantity exceeds inventory
-- assert successful reservations
-- assert final inventory
-- assert failed transactions leave no partial state
-
----
-
-## 5. Stateful behavior requires state verification
-
-For requirements involving:
-
-- transactions
-- persistence
-- inventory
-- orders
-- cancellation
-- rollback
-- idempotency
-- concurrency
-
-Do not rely only on API responses.
-
-Verify relevant database state.
-
----
-
-## 6. Use the minimum test level that can prove the requirement
-
-Default preference:
-
-1. Unit
-2. Integration
-3. API
-4. E2E
-
-But the requirement overrides this preference.
+### Weak evidence
 
 Examples:
 
-- pure domain rule → unit test
-- transaction rollback → integration test
-- PostgreSQL locking → real PostgreSQL integration test
-- API contract → API test
-- complete user workflow → E2E
+* class exists
+* method exists
+* CSS variable exists
+* test file exists
+* source contains a keyword
+* annotation exists
+* method was invoked
+* HTTP request returned 200
+
+### Strong evidence
+
+Examples:
+
+* rendered browser state
+* computed browser styles
+* actual user interaction
+* accessibility tree
+* database state
+* transaction rollback
+* persistent state after restart
+* API response plus state verification
+* real concurrent execution
+* final invariant verification
+* complete user workflow
+
+The Evaluation should prefer the weakest test level that can genuinely
+prove the requirement, but must not weaken evidence merely to make testing
+easier.
 
 ---
 
-## 7. Include failure paths
+# 5. Evaluation Structure
 
-For each important operation consider:
+Every Evaluation SHOULD contain:
 
-- invalid input
-- nonexistent entity
-- invalid state
-- insufficient inventory
-- transaction failure
-- duplicate request
-- concurrent request
-- partial failure
-
-Do not specify only the happy path.
-
----
-
-# Evaluation Structure
-
-Every Evaluation should contain:
-
+```text
 1. Objective
 2. Context / Scenario
 3. Acceptance Criteria
@@ -183,220 +238,1045 @@ Every Evaluation should contain:
 7. Regression Requirements
 8. Verification
 9. Forbidden Shortcuts
-
----
-
-# Paired Task
-
-An Evaluation defines what is correct. A Task defines what to build. In this
-Harness they are separate but paired artifacts:
-
-- `.harness/evaluations/<NNN>-<slug>.md` — the behavioral contract.
-- `.harness/tasks/<NNN>-<slug>.prompt.md` — the build prompt for an agent.
-
-For every Evaluation, author a matching Task in `.harness/tasks/`.
-
-## Coupling
-
-The relationship is one-directional:
-
-```text
-Task  →  references  →  Evaluation
+10. Completion Criteria
 ```
 
-A Task must reference its Evaluation by file path (for example
-`.harness/evaluations/006-...md`). An Evaluation generally does not reference
-its Task; it is the standalone source of truth for correctness.
+Recommended structure:
 
-## Task Structure
+```markdown
+# Evaluation NNN — <name>
 
-A Task is an executable prompt, not a contract. Follow the repository task
-style (prose prompt). Include:
+## Objective
 
-1. Title: `# Task NNN — <what to build>`
-2. **Read:** the files an agent must read first, including:
-   - `AGENTS.md`
-   - `.github/instructions/` for the relevant layer
-   - `.github/agents/order-system.agent.md`
-   - the paired `.harness/evaluations/<NNN>-<slug>.md`
-3. **Requirement:** a short description of what to implement, scoped to the
-   Evaluation.
-4. **Tests:** the tests required to produce the Evaluation's evidence,
-   mirroring its `Required Tests` and `Required Evidence`.
-5. **Constraints:** what the agent must not do (weaken/delete tests, modify
-   Evaluation criteria, modify verification scripts, duplicate business
-   rules, etc.).
-6. **Verification:** run `./scripts/verify.sh` until it passes.
-7. **Completion:** the Task is complete only when `./scripts/verify.sh`
-   exits with code 0.
+## Context / Scenario
 
-## Scope Match
+## Acceptance Criteria
 
-The Task must not expand or shrink the Evaluation's scope. Do not:
-
-- add requirements to the Task that are absent from the Evaluation
-- omit Evaluation acceptance criteria from the Task's tests
-- change the Evaluation to match a convenience in the Task
-
-If the Task and Evaluation drift, reconcile them before implementation
-begins.
-
----
-
-# Acceptance Criteria
-
-Use stable identifiers:
-
-AC-1
-AC-2
-AC-3
+### AC-1 ...
 ...
 
-Each criterion should represent one independently meaningful requirement.
+## Required Evidence
 
-Example:
+| Criterion | Required Evidence | Test / Verification |
+|---|---|---|
 
-### AC-1 Inventory never becomes negative
+## Required Tests
 
-Inventory quantity must never fall below zero under concurrent
-reservation attempts.
+1.
+2.
+3.
 
-### AC-2 Successful reservations never exceed available inventory
+## Architecture Constraints
 
-The total successfully reserved quantity must not exceed the initial
-available inventory.
+## Regression Requirements
 
----
+## Verification
 
-# Evidence Matrix
+## Forbidden Shortcuts
 
-Every Evaluation MUST contain an evidence mapping.
-
-Example:
-
-| Criterion | Required Evidence |
-|---|---|
-| AC-1 | Real PostgreSQL concurrent integration test + final inventory assertion |
-| AC-2 | Concurrent reservation test + successful quantity assertion |
-| AC-3 | Overlapping transaction scenario |
-| AC-4 | Failed transaction + database state assertions |
-
-If an acceptance criterion cannot be mapped to evidence, the Evaluation
-is incomplete.
+## Completion Criteria
+```
 
 ---
 
-# Concurrency Requirements
+# 6. Evidence Matrix Must Be Complete
 
-When the requirement involves concurrency, explicitly require:
+Every Evaluation MUST contain a mapping like:
 
-- real concurrent execution
-- independent transactions where appropriate
-- real persistence when persistence behavior is under evaluation
-- synchronization rather than arbitrary sleeps
-- assertions on final state
-- assertions on both success and failure
+| Criterion | Required Evidence                         | Test / Verification          |
+| --------- | ----------------------------------------- | ---------------------------- |
+| AC-1      | Real PostgreSQL final-state assertion     | Integration test             |
+| AC-2      | Concurrent successful quantity assertion  | Concurrent integration test  |
+| AC-3      | Failed transaction leaves state unchanged | Transaction integration test |
 
-Avoid prescribing one implementation mechanism unless required.
+The following conditions are mandatory:
 
-Do NOT accept a sequential loop as concurrency evidence.
+### No orphan AC
 
----
+Every AC must have:
 
-# Transaction Requirements
+```text
+AC → Evidence → Test/Verification
+```
 
-When evaluating transaction behavior, specify:
+### No orphan required test
 
-- atomicity
-- rollback
-- database state
-- partial failure behavior
-- transaction boundary
+Every Required Test must contribute evidence to at least one AC.
 
-Do not only require an annotation such as @Transactional.
+If a Required Test cannot be mapped to an AC, it should normally be removed.
 
-The evidence must demonstrate actual transactional behavior.
+### No vague evidence
 
----
+"Unit tests" is not sufficient.
 
-# Idempotency Requirements
+"Playwright E2E test" is not sufficient.
 
-For idempotency:
-
-- execute the same logical operation multiple times
-- verify deterministic result
-- verify no duplicate business side effects
-- verify database state
-- consider concurrent duplicate requests when relevant
+Describe what the test must actually observe.
 
 ---
 
-# Regression
+# 7. Test Level Selection
 
-Only include regression requirements that are materially related to the
-change.
+Use the minimum test level capable of proving the requirement.
 
-Avoid requiring unrelated test suites merely to increase test quantity.
+Default preference:
 
----
+1. Unit
+2. Integration
+3. API / Contract
+4. E2E
 
-# Forbidden Shortcuts
-
-Use forbidden shortcuts to prevent gaming the Evaluation.
+But the behavior being evaluated overrides this ordering.
 
 Examples:
 
-- replacing required integration tests with mocks
-- replacing concurrent execution with sequential execution
-- weakening assertions
-- deleting tests
-- skipping failures
-- modifying Evaluation criteria
-- modifying verification scripts to make the task pass
-- hard-coding test-specific behavior
-- bypassing transaction requirements
+```text
+Pure domain rule
+→ Unit
 
-Do not create artificial restrictions unrelated to correctness.
+Persistence behavior
+→ Integration
+
+Transaction / rollback
+→ Integration + persistent state
+
+Database locking
+→ Real database integration
+
+Concurrency
+→ Real concurrent integration
+
+API contract
+→ API / contract test
+
+Complete user workflow
+→ E2E
+
+Rendered UI
+→ Browser-based evidence
+
+Accessibility
+→ Accessibility tooling + browser evidence
+```
+
+Do not require E2E merely because it sounds stronger.
+
+Do not accept unit tests when the behavior exists at a database,
+transaction, browser, or distributed-system boundary.
 
 ---
 
-# Quality Checklist
+# 8. Stateful Requirements
 
-Before finalizing an Evaluation, verify:
+Whenever correctness depends on state, evidence must verify state.
 
-- [ ] Objective is clear
-- [ ] Acceptance criteria are independently testable
-- [ ] Every AC has explicit evidence
-- [ ] Evidence is strong enough to detect incorrect behavior
-- [ ] Happy path is covered
-- [ ] Important failure paths are covered
-- [ ] Stateful requirements verify state
-- [ ] Transaction requirements use integration evidence
-- [ ] Concurrency requirements use real concurrency
-- [ ] Required database behavior uses real database where necessary
-- [ ] Architecture constraints are meaningful
-- [ ] Regression requirements are relevant
-- [ ] Verification requirement exists
-- [ ] Forbidden shortcuts are defined
-- [ ] Implementation details are not unnecessarily prescribed
-- [ ] A matching Task is created in `.harness/tasks/`
-- [ ] The Task references the Evaluation by file path
-- [ ] Task scope matches the Evaluation scope
+This applies to:
+
+* orders
+* inventory
+* cancellation
+* transactions
+* rollback
+* idempotency
+* concurrency
+* persistence
+* state transitions
+
+Do not rely solely on:
+
+```text
+HTTP status
+return value
+mock interaction
+method invocation
+```
+
+For example:
+
+```text
+Request
+  ↓
+Business operation
+  ↓
+Database state
+```
+
+If database state is part of correctness, the Evaluation must require
+verification of the database state.
+
+---
+
+# 9. Concurrency Requirements
+
+When evaluating concurrency, explicitly require evidence of real concurrency.
+
+At minimum, consider:
+
+* multiple execution threads/tasks
+* overlapping execution
+* independent transactions where appropriate
+* deterministic synchronization
+* realistic contention
+* real persistence when persistence is under evaluation
+* success and failure outcomes
+* final database state
+
+Do NOT accept:
+
+```text
+for (...) {
+    reserve();
+}
+```
+
+as concurrency evidence.
+
+Do NOT accept mocked persistence when the behavior under evaluation is
+database concurrency.
+
+Avoid arbitrary sleeps.
+
+Prefer:
+
+* CountDownLatch
+* barriers
+* executor coordination
+* transaction boundaries
+* deterministic synchronization
+
+The exact implementation mechanism should remain flexible unless it is
+itself part of the contract.
+
+---
+
+# 10. Transaction Requirements
+
+For transaction-related behavior, evaluate actual behavior rather than
+annotations.
+
+Consider:
+
+* atomicity
+* rollback
+* partial failure
+* transaction boundary
+* database state before and after failure
+* consistency after exceptions
+
+Do not accept:
+
+> Method contains `@Transactional`.
+
+as evidence of transaction correctness.
+
+The evidence must demonstrate the observable transactional behavior.
+
+---
+
+# 11. Idempotency Requirements
+
+For idempotency:
+
+* execute the same logical operation multiple times
+* verify deterministic result
+* verify no duplicate business side effects
+* verify persistent state
+* consider concurrent duplicate requests when relevant
+
+An HTTP 200 response alone is not evidence of idempotency.
+
+---
+
+# 12. UI / Visual Evaluation Requirements
+
+For UI evaluations, source-code inspection alone is insufficient.
+
+When the requirement concerns rendered UI, evidence may include:
+
+* real browser rendering
+* computed styles
+* DOM state
+* accessibility tree
+* user interaction
+* responsive viewports
+* screenshots
+* visual inspection
+* complete user workflows
+
+Prefer:
+
+```text
+source inspection
++
+rendered browser evidence
++
+interaction evidence
+```
+
+over:
+
+```text
+grep CSS variable
+```
+
+Do not use pixel-perfect screenshot comparison as the default acceptance
+mechanism.
+
+Prefer robust behavioral and visual evidence such as:
+
+* computed styles
+* layout relationships
+* token usage
+* rendered hierarchy
+* spacing relationships
+* responsive behavior
+* accessibility
+* interaction states
+* screenshots for human-readable visual confirmation
+
+---
+
+# 13. Architecture Constraints
+
+Architecture constraints are allowed when they protect an important
+system invariant or explicit product requirement.
+
+Good:
+
+> Frontend must continue using the existing typed API client.
+
+Good:
+
+> Business rules must remain in the backend.
+
+Good:
+
+> Concurrent inventory behavior must be evaluated against real PostgreSQL.
+
+Bad:
+
+> Create exactly three React components.
+
+Bad:
+
+> Use a class named `InventoryLockManager`.
+
+Bad:
+
+> Put logic in this exact method.
+
+Do not turn implementation preferences into Evaluation requirements.
+
+---
+
+# 14. Regression Requirements
+
+Regression requirements must be related to the changed behavior.
+
+Ask:
+
+> What existing behavior could this change accidentally break?
+
+Examples:
+
+* order creation still works
+* cancellation still works
+* existing API contract remains compatible
+* loading/error/empty states remain functional
+* existing authentication behavior remains intact
+
+Do not require unrelated tests merely to increase test quantity.
+
+---
+
+# 15. Forbidden Shortcuts
+
+Forbidden shortcuts should prevent false PASS results.
+
+Useful examples:
+
+* replacing required integration tests with mocks
+* replacing real concurrency with sequential execution
+* weakening assertions
+* deleting tests
+* disabling verification
+* modifying verification scripts to obtain PASS
+* modifying Evaluation criteria to accommodate implementation
+* hard-coding test-specific behavior
+* bypassing transaction boundaries
+* asserting only HTTP status when persistent state matters
+* asserting only source code when rendered behavior matters
+* creating CSS tokens that are never used by rendered UI
+* screenshot-only acceptance for behavioral requirements
+
+Do not prohibit legitimate implementation choices merely because they
+differ from the author's preferred solution.
+
+---
+
+# 16. Paired Task
+
+For every Evaluation, create exactly one matching Task:
+
+```text
+.harness/evaluations/NNN-<slug>.md
+.harness/tasks/NNN-<slug>.prompt.md
+```
+
+The Evaluation ID is the stable identity of the work.
+
+For example:
+
+```text
+001 → 001-order-system-mvp
+002 → 002-order-cancellation
+003 → 003-inventory-concurrency
+```
+
+The Task MUST reference its paired Evaluation by exact file path.
+
+Example:
+
+```text
+.harness/evaluations/006-web-ui-redesign.md
+```
+
+The Evaluation should generally NOT reference the Task.
+
+This keeps the dependency direction:
+
+```text
+Task
+  ↓
+references
+  ↓
+Evaluation
+```
+
+not:
+
+```text
+Evaluation ↔ Task
+```
+
+---
+
+# 17. Task Is NOT a Copy of the Evaluation
+
+This is one of the most important rules.
+
+The Task is an implementation prompt.
+
+It should NOT copy:
+
+* every Acceptance Criterion
+* the complete Evidence Matrix
+* every Required Test description
+* the entire Regression Requirements section
+* the entire Forbidden Shortcuts section
+* detailed acceptance language
+
+Those belong in the Evaluation.
+
+Instead, the Task should tell the implementation agent:
+
+```text
+What should I build?
+What should I read?
+Where should I work?
+What existing architecture should I preserve?
+What tests should I create/update?
+What must I avoid?
+What verification should I run?
+```
+
+The Task may summarize important requirements, but the Evaluation remains
+the source of truth.
+
+---
+
+# 18. Task Structure
+
+Every Task SHOULD contain:
+
+```markdown
+# Task NNN — <implementation objective>
+
+## Read
+
+- AGENTS.md
+- relevant instructions
+- relevant agent definition
+- paired Evaluation
+- relevant skills
+
+## Objective
+
+Short implementation-oriented description.
+
+## Scope
+
+Files/directories the implementation may modify.
+
+## Implementation Guidance
+
+High-level implementation guidance.
+
+Do not prescribe implementation details that belong to Planner unless
+necessary.
+
+## Testing
+
+Implement the tests required to produce the evidence defined by the
+paired Evaluation.
+
+Read the Evaluation's Required Evidence and Required Tests rather than
+redefining acceptance criteria here.
+
+## Constraints
+
+Do not modify:
+- Evaluation criteria
+- verification scripts
+- unrelated production areas
+- backend/frontend layers outside the assigned scope
+
+## Verification
+
+Run the repository verification contract.
+
+## Completion
+
+Implementation is complete only when the required tests and repository
+verification pass and the implementation satisfies the paired Evaluation.
+```
+
+---
+
+# 19. Task Scope Must Match Evaluation Scope
+
+The Task and Evaluation must describe the same work.
+
+The Task must not:
+
+### Expand scope
+
+Example:
+
+Evaluation:
+
+> Redesign frontend presentation.
+
+Task:
+
+> Also refactor backend order APIs.
+
+Invalid.
+
+### Shrink scope
+
+Evaluation:
+
+> Create order, cancellation, and persistence behavior.
+
+Task:
+
+> Only implement the create-order endpoint.
+
+Invalid.
+
+### Change acceptance
+
+Evaluation:
+
+> Inventory must never become negative.
+
+Task:
+
+> It is acceptable if inventory becomes negative under rare contention.
+
+Invalid.
+
+If there is a mismatch, fix the artifacts before implementation starts.
+
+---
+
+# 20. Task Should Point Agents to the Evaluation
+
+Instead of duplicating the Evaluation:
+
+```text
+Read:
+
+- AGENTS.md
+- relevant instructions
+- relevant agent definition
+- .harness/evaluations/003-inventory-concurrency.md
+```
+
+Then:
+
+> Implement the behavior described by the paired Evaluation.
+
+This allows the Evaluation to remain the single source of truth.
+
+---
+
+# 21. Task Testing Rules
+
+The Task should say that implementation must produce the evidence required
+by the Evaluation.
+
+It should NOT invent an independent testing contract.
+
+Good:
+
+> Implement or update the tests necessary to produce the evidence defined
+> in Evaluation 003. Pay particular attention to its concurrency and
+> persistent-state requirements.
+
+Bad:
+
+> Add exactly 10 unit tests, 5 integration tests, and 3 E2E tests.
+
+The second creates arbitrary test quantity rather than meaningful evidence.
+
+---
+
+# 22. Evaluation ↔ Task Consistency Audit
+
+Before finalizing a pair, perform a consistency audit.
+
+Create this internal mapping:
+
+```text
+Evaluation AC
+      ↓
+Required Evidence
+      ↓
+Required Test
+      ↓
+Task implementation scope
+```
+
+Verify:
+
+* every AC can be implemented within Task scope
+* every Required Test is possible within Task scope
+* Task does not introduce additional acceptance requirements
+* Task does not omit necessary implementation scope
+* Task references the correct Evaluation
+* Evaluation ID and Task ID match
+* filename slug matches
+* both artifacts describe the same feature
+
+If any mismatch exists, fix the pair before writing the files.
+
+---
+
+# 23. Evaluation ID Is a Stable Contract
+
+Evaluation IDs must be stable.
+
+Once an Evaluation is published:
+
+```text
+003
+```
+
+continues to mean the same Evaluation.
+
+Do not renumber existing Evaluations merely because the desired ordering
+changed.
+
+For example, if:
+
+```text
+005-regression
+006-web-ui-redesign
+```
+
+already exist, do not rename them simply to place regression after UI
+redesign.
+
+Stable IDs are more important than filename ordering.
+
+---
+
+# 24. run-evaluation.sh Integration
+
+When authoring a new Evaluation, the Evaluation must also be registered
+with:
+
+```text
+scripts/run-evaluation.sh
+```
+
+The registration must use the same stable Evaluation ID.
+
+Example:
+
+```bash
+case "$EVALUATION_ID" in
+  001)
+    EVALUATION="001-order-system-mvp"
+    ;;
+  002)
+    EVALUATION="002-order-cancellation"
+    ;;
+  003)
+    EVALUATION="003-inventory-concurrency"
+    ;;
+esac
+```
+
+For a new Evaluation:
+
+1. create the Evaluation
+2. create the matching Task
+3. register the Evaluation ID
+4. verify that the Evaluation path exists
+5. verify that the matching Task path exists
+
+The Skill MUST NOT silently create an Evaluation that cannot be selected
+by `run-evaluation.sh`.
+
+---
+
+# 25. run-evaluation.sh Is an Execution Harness, Not the Evaluation
+
+Do not put acceptance criteria directly into:
+
+```text
+scripts/run-evaluation.sh
+```
+
+The script is responsible for orchestration and execution.
+
+The Evaluation remains responsible for defining correctness.
+
+Conceptually:
+
+```text
+Evaluation.md
+    ↓
+defines correctness
+
+run-evaluation.sh
+    ↓
+executes verification
+
+report
+    ↓
+records result/evidence
+```
+
+Do not duplicate AC definitions inside shell scripts.
+
+---
+
+# 26. Evaluation Verification vs Repository Verification
+
+Distinguish:
+
+### Evaluation verification
+
+Evidence proving the specific Evaluation.
+
+Example:
+
+```text
+003-inventory-concurrency
+→ concurrent PostgreSQL test
+→ final inventory assertion
+→ rollback assertion
+```
+
+### Repository verification
+
+General repository health:
+
+```text
+./scripts/verify.sh
+```
+
+A repository-level PASS does not automatically prove every Evaluation
+criterion.
+
+Likewise:
+
+> A test exists
+
+does not mean:
+
+> The Evaluation is satisfied.
+
+The Harness must preserve this distinction.
+
+---
+
+# 27. Completion Gate
+
+An Evaluation/Task pair is complete only when:
+
+```text
+Evaluation exists
+        AND
+Task exists
+        AND
+Task references Evaluation
+        AND
+Scope matches
+        AND
+Every AC has evidence
+        AND
+Every required test maps to evidence
+        AND
+No orphan AC exists
+        AND
+No orphan required test exists
+        AND
+run-evaluation.sh recognizes the Evaluation ID
+        AND
+repository verification can execute
+```
+
+For implementation completion, additionally require:
+
+```text
+Required tests pass
+        AND
+Evidence is sufficient
+        AND
+Reviewer approves
+        AND
+./scripts/verify.sh passes
+```
+
+---
+
+# 28. Anti-Gaming Review
+
+Before finalizing the Evaluation, actively try to defeat it.
+
+Ask:
+
+> What is the easiest incorrect implementation that could still pass?
+
+Consider:
+
+* mocked persistence
+* sequential substitute for concurrency
+* source-only CSS checks
+* tests that never execute the changed code
+* assertions that are too weak
+* hard-coded test-specific behavior
+* deleted regression tests
+* disabled verification
+* fake browser state
+* mocked API responses for a real integration requirement
+* screenshot-only acceptance
+* testing only success while ignoring failure state
+
+Strengthen the Evaluation where necessary.
+
+---
+
+# 29. Quality Checklist
+
+Before creating the artifacts:
+
+### Evaluation
+
+* [ ] Objective is clear
+* [ ] Scenario provides enough context
+* [ ] ACs are independently testable
+* [ ] ACs describe behavior rather than implementation
+* [ ] Every AC has explicit evidence
+* [ ] Every AC has a test/verification strategy
+* [ ] Evidence can detect an incorrect implementation
+* [ ] Stateful requirements verify state
+* [ ] Transaction requirements use real transactional evidence
+* [ ] Concurrency requirements use real concurrency
+* [ ] Database requirements use real database behavior when necessary
+* [ ] UI requirements include rendered browser evidence when necessary
+* [ ] Accessibility requirements include meaningful accessibility evidence
+* [ ] Failure paths are covered
+* [ ] Regression requirements are relevant
+* [ ] Architecture constraints are meaningful
+* [ ] Forbidden shortcuts prevent obvious gaming
+* [ ] No unnecessary implementation details are prescribed
+* [ ] No orphan AC exists
+* [ ] No orphan Required Test exists
+
+### Task
+
+* [ ] Matching Task exists
+* [ ] Same Evaluation ID
+* [ ] Exact Evaluation path is referenced
+* [ ] Task is implementation-oriented
+* [ ] Task does not duplicate the Evaluation
+* [ ] Task scope matches Evaluation scope
+* [ ] Task does not invent additional acceptance criteria
+* [ ] Task points agents to the Evaluation
+* [ ] Task identifies relevant files/instructions/skills
+* [ ] Task defines implementation boundaries
+* [ ] Task identifies required testing work
+* [ ] Task includes verification
+* [ ] Task does not prescribe unnecessary implementation details
+
+### Integration
+
+* [ ] Evaluation is registered in `run-evaluation.sh`
+* [ ] Evaluation path exists
+* [ ] Task path exists
+* [ ] IDs match
+* [ ] Slugs match
+* [ ] No existing Evaluation ID is accidentally reused
+* [ ] Existing Evaluation IDs are not renumbered
+
+---
+
+# 30. Authoring Workflow
+
+When asked to create or update an Evaluation:
+
+## Step 1 — Understand the requirement
+
+Identify:
+
+* desired behavior
+* affected system layer
+* state
+* failure modes
+* existing behavior that must remain
+
+## Step 2 — Design the Evaluation
+
+Define:
+
+```text
+Objective
+Scenario
+ACs
+Evidence
+Tests
+Constraints
+Regression
+Verification
+Forbidden shortcuts
+```
+
+## Step 3 — Attack the Evaluation
+
+Try to construct an incorrect implementation that could pass.
+
+Strengthen evidence until it cannot easily do so.
+
+## Step 4 — Author the Task
+
+Create a paired Task that:
+
+* references the Evaluation
+* describes implementation scope
+* identifies files/skills to read
+* gives implementation guidance
+* points testing back to Evaluation evidence
+* avoids duplicating acceptance criteria
+
+## Step 5 — Audit the Pair
+
+Check:
+
+```text
+Evaluation AC
+    ↓
+Evidence
+    ↓
+Test
+    ↓
+Task scope
+```
+
+## Step 6 — Register the Evaluation
+
+Add the Evaluation ID to:
+
+```text
+scripts/run-evaluation.sh
+```
+
+## Step 7 — Final Review
+
+Do not consider the work complete until:
+
+* Evaluation is objectively verifiable
+* Task and Evaluation are aligned
+* Evaluation remains the source of truth
+* run-evaluation.sh can select it
+
+---
+
+# 31. Important Rule for Existing Evaluations
+
+When updating an existing Evaluation:
+
+* preserve its stable ID
+* preserve valid existing acceptance behavior
+* do not weaken existing requirements merely to simplify implementation
+* strengthen evidence where necessary
+* update the paired Task if scope or implementation expectations change
+* keep Task and Evaluation synchronized
+* update `run-evaluation.sh` only if registration is missing or incorrect
+
+Do not casually rewrite stable Evaluation IDs.
 
 ---
 
 # Final Rule
 
-An Evaluation is not complete merely because it contains requirements.
+The goal is NOT to create two detailed documents.
 
-It is complete only when:
+The goal is to create one authoritative behavioral contract and one concise
+implementation entry point.
 
-Every acceptance criterion
-    has explicit evidence
-    that can meaningfully prove or disprove the criterion.
+The correct relationship is:
 
-If the Evaluation cannot be objectively verified, improve the Evaluation
-before allowing implementation to begin.
+```text
+                    Evaluation
+                   /           \
+          correctness           evidence
+               │                   │
+               └─────────┬─────────┘
+                         │
+                        Task
+                         │
+                  implementation
+                         │
+                       Tests
+                         │
+                      Evidence
+                         │
+                      Reviewer
+                         │
+                    verify.sh
+```
 
-The Evaluation is not done until its matching Task is also authored, the
-Task references the Evaluation, and the Task scope matches the Evaluation.
+Therefore:
+
+> **Evaluation defines what "correct" means.**
+
+> **Task tells an agent what work to perform in order to satisfy that
+> Evaluation.**
+
+> **Planner decides how to implement it.**
+
+> **Test produces the evidence.**
+
+> **Reviewer independently judges the evidence.**
+
+> **verify.sh verifies the repository contract.**
+
+Never allow the Task to become a second, competing Evaluation.
+Never allow the Evaluation to become an implementation plan.
+Never allow the test suite to define correctness by itself.
