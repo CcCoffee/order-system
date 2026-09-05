@@ -4,7 +4,10 @@ import com.example.orderservice.application.CreateOrderCommand;
 import com.example.orderservice.application.CreateOrderItemCommand;
 import com.example.orderservice.application.OrderApplicationService;
 import com.example.orderservice.application.ProductNotFoundException;
+import com.example.orderservice.domain.AuditLog;
 import com.example.orderservice.domain.Inventory;
+import com.example.orderservice.domain.OrderNotCancellableException;
+import com.example.orderservice.domain.repository.AuditLogRepository;
 import com.example.orderservice.domain.repository.InventoryRepository;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,9 @@ class OrderTransactionIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     InventoryRepository inventoryRepository;
+
+    @Autowired
+    AuditLogRepository auditLogRepository;
 
     @Test
     void createOrderReservesInventory() {
@@ -69,5 +75,42 @@ class OrderTransactionIntegrationTest extends AbstractIntegrationTest {
         Inventory after = inventoryRepository.findByProductId(WIDGET).orElseThrow();
         assertThat(after.getQuantity()).isEqualTo(availableBefore);
         assertThat(after.getReservedQuantity()).isEqualTo(reservedBefore);
+    }
+
+    @Test
+    void cancellationWritesAuditLog() {
+        var created = orderService.createOrder(
+                new CreateOrderCommand(List.of(new CreateOrderItemCommand(WIDGET, 2))), null);
+
+        orderService.cancelOrder(created.id());
+
+        List<AuditLog> cancelledLogs = auditLogRepository.findAll().stream()
+                .filter(log -> created.id().equals(log.getOrderId()))
+                .filter(log -> "ORDER_CANCELLED".equals(log.getEvent()))
+                .toList();
+
+        assertThat(cancelledLogs)
+                .as("Expected exactly one ORDER_CANCELLED audit log for order %s", created.id())
+                .hasSize(1);
+
+        AuditLog log = cancelledLogs.get(0);
+        assertThat(log.getStatusBefore()).isEqualTo("PENDING");
+        assertThat(log.getStatusAfter()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    void repeatedCancellationDoesNotDoubleReleaseInventory() {
+        var created = orderService.createOrder(
+                new CreateOrderCommand(List.of(new CreateOrderItemCommand(WIDGET, 3))), null);
+
+        orderService.cancelOrder(created.id());
+        Inventory afterFirstCancel = inventoryRepository.findByProductId(WIDGET).orElseThrow();
+
+        assertThatThrownBy(() -> orderService.cancelOrder(created.id()))
+                .isInstanceOf(OrderNotCancellableException.class);
+
+        Inventory afterSecondCancel = inventoryRepository.findByProductId(WIDGET).orElseThrow();
+        assertThat(afterSecondCancel.getQuantity()).isEqualTo(afterFirstCancel.getQuantity());
+        assertThat(afterSecondCancel.getReservedQuantity()).isEqualTo(afterFirstCancel.getReservedQuantity());
     }
 }
