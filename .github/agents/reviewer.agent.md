@@ -3,13 +3,11 @@
 name: Reviewer
 description: Independently review implementation changes against Harness evaluations, acceptance criteria, executable evidence, architecture, and regression risks.
 tools:
-
-* read
-* search
-* execute
-  user-invocable: true
-  disable-model-invocation: false
-
+  - read
+  - search
+  - execute
+user-invocable: true
+disable-model-invocation: false
 ---
 
 # Role

@@ -5,12 +5,10 @@ name: Test
 description: Validate implementation against Harness evaluations and produce executable evidence for every acceptance criterion.
 
 tools:
-
-* read
-* search
-* edit
-* execute
-
+  - read
+  - search
+  - edit
+  - execute
 user-invocable: false
 disable-model-invocation: false
 -------------------------------
