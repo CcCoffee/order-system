@@ -107,10 +107,13 @@ class OrderApiIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void idempotencyKeyReturnsSameOrder() {
+        // Use a per-run unique key: the database now uniquely constrains
+        // idempotency_key, so a fixed key could collide with a prior run.
+        String key = UUID.randomUUID().toString();
         CreateOrderRequest request =
                 new CreateOrderRequest(List.of(new CreateOrderItemRequest(WIDGET, 1)));
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Idempotency-Key", "key-123");
+        headers.set("Idempotency-Key", key);
         HttpEntity<CreateOrderRequest> entity = new HttpEntity<>(request, headers);
 
         ResponseEntity<OrderResponse> first = rest.postForEntity("/api/orders", entity, OrderResponse.class);
@@ -120,7 +123,11 @@ class OrderApiIntegrationTest extends AbstractIntegrationTest {
         assertThat(second.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(first.getBody()).isNotNull();
         assertThat(second.getBody()).isNotNull();
-        assertThat(first.getBody().id()).isEqualTo(second.getBody().id());
+        // AC-3: repeated callers observe the same logical result.
+        assertThat(second.getBody().id()).isEqualTo(first.getBody().id());
+        assertThat(second.getBody().status()).isEqualTo(first.getBody().status());
+        assertThat(second.getBody().totalAmount()).isEqualByComparingTo(first.getBody().totalAmount());
+        assertThat(second.getBody().items()).isEqualTo(first.getBody().items());
         cancel(first.getBody().id());
     }
 

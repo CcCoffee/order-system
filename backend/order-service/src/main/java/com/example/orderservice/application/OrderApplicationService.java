@@ -12,12 +12,13 @@ import com.example.orderservice.domain.repository.InventoryRepository;
 import com.example.orderservice.domain.repository.OrderRepository;
 import com.example.orderservice.domain.repository.ProductRepository;
 import com.example.orderservice.infrastructure.OrderCache;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,53 +26,99 @@ import java.util.UUID;
 /**
  * Application service coordinating the order use cases.
  *
- * <p>Each use case runs inside a single transaction so that order creation and
- * cancellation are atomic with respect to inventory reservation/release and
- * audit logging.
+ * <p>{@link #createOrder(CreateOrderCommand, String)} is a non-transactional
+ * orchestrator that drives idempotency coordination and delegates the
+ * transactional creation to a Spring proxy (held as {@code self}) so the
+ * {@code @Transactional} boundary is enforced by a real proxy boundary.
+ *
+ * <p>Each transactional use case runs inside a single transaction so that order
+ * creation and cancellation are atomic with respect to inventory
+ * reservation/release and audit logging.
  */
 @Service
 public class OrderApplicationService {
+
+    private static final int LOCK_WAIT_ATTEMPTS = 5;
+    private static final Duration LOCK_WAIT_POLL = Duration.ofMillis(100);
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
     private final ProductRepository productRepository;
     private final AuditLogRepository auditLogRepository;
     private final OrderCache orderCache;
+    private final OrderApplicationService self;
 
     public OrderApplicationService(OrderRepository orderRepository,
                                    InventoryRepository inventoryRepository,
                                    ProductRepository productRepository,
                                    AuditLogRepository auditLogRepository,
-                                   OrderCache orderCache) {
+                                   OrderCache orderCache,
+                                   @Lazy OrderApplicationService self) {
         this.orderRepository = orderRepository;
         this.inventoryRepository = inventoryRepository;
         this.productRepository = productRepository;
         this.auditLogRepository = auditLogRepository;
         this.orderCache = orderCache;
+        this.self = self;
     }
 
-    @Transactional
     public OrderResponse createOrder(CreateOrderCommand command, String idempotencyKey) {
-        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+        boolean hasKey = idempotencyKey != null && !idempotencyKey.isBlank();
+
+        if (hasKey) {
             Optional<UUID> existing = orderCache.getIdempotency(idempotencyKey);
             if (existing.isPresent()) {
-                return getOrder(existing.get());
+                return self.getOrder(existing.get());
             }
         }
+
+        String lockToken = UUID.randomUUID().toString();
+        boolean lockHeld = false;
+
+        if (hasKey) {
+            OrderCache.LockResult lock = orderCache.tryAcquireIdempotencyLock(idempotencyKey, lockToken);
+            if (lock == OrderCache.LockResult.ACQUIRED) {
+                lockHeld = true;
+            } else if (lock == OrderCache.LockResult.BUSY) {
+                Optional<OrderResponse> resolved = waitForIdempotencyResolution(idempotencyKey);
+                if (resolved.isPresent()) {
+                    return resolved.get();
+                }
+            }
+        }
+
+        try {
+            return self.createOrderTx(command, hasKey ? idempotencyKey : null, lockToken, lockHeld);
+        } catch (RuntimeException ex) {
+            if (hasKey) {
+                Optional<OrderResponse> existing = self.findExistingByIdempotencyKey(idempotencyKey);
+                if (existing.isPresent()) {
+                    return existing.get();
+                }
+            }
+            throw ex;
+        }
+    }
+
+    /**
+     * Transactional order creation. Must be invoked through the Spring proxy
+     * ({@code self}) so the transaction boundary is visible.
+     *
+     * <p>If a duplicate key races, the database unique index raises a
+     * constraint violation that rolls this transaction back; the caller re-reads
+     * using {@link #findExistingByIdempotencyKey(String)}.
+     */
+    @Transactional
+    public OrderResponse createOrderTx(CreateOrderCommand command, String idempotencyKey,
+                                       String lockToken, boolean lockHeld) {
         if (command.items().isEmpty()) {
             throw new IllegalArgumentException("Order must contain at least one item");
         }
 
-        Order order = new Order(UUID.randomUUID());
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        Order order = new Order(UUID.randomUUID(), idempotencyKey);
 
         for (CreateOrderItemCommand item : command.items()) {
-            if (item.productId() == null) {
-                throw new IllegalArgumentException("productId is required");
-            }
-            if (item.quantity() <= 0) {
-                throw new IllegalArgumentException("Quantity must be positive");
-            }
+            validateItem(item);
             Product product = productRepository.findById(item.productId())
                     .orElseThrow(() -> new ProductNotFoundException(item.productId()));
             Inventory inventory = inventoryRepository.findByProductIdForUpdate(item.productId())
@@ -81,15 +128,35 @@ public class OrderApplicationService {
             order.addItem(product.getId(), product.getName(), product.getPrice(), item.quantity());
         }
 
-        orderRepository.save(order);
-        auditLogRepository.save(new AuditLog(order.getId(), "ORDER_CREATED", null, OrderStatus.PENDING.name()));
+        Order saved = orderRepository.save(order);
+        auditLogRepository.save(
+                new AuditLog(saved.getId(), "ORDER_CREATED", null, OrderStatus.PENDING.name()));
 
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            UUID orderId = order.getId();
-            registerAfterCommit(() -> orderCache.putIdempotency(idempotencyKey, orderId));
+            registerIdempotencyAfterCommit(saved.getId(), idempotencyKey, lockToken, lockHeld);
         }
 
-        return toResponse(order);
+        return toResponse(saved);
+    }
+
+    /**
+     * Re-reads an order by idempotency key inside a fresh transaction.
+     *
+     * <p>Used after a duplicate create attempt to return the winner's order
+     * instead of surfacing a race-related exception.
+     */
+    @Transactional(readOnly = true)
+    public Optional<OrderResponse> findExistingByIdempotencyKey(String idempotencyKey) {
+        return orderRepository.findByIdempotencyKey(idempotencyKey).map(this::toResponse);
+    }
+
+    private void validateItem(CreateOrderItemCommand item) {
+        if (item.productId() == null) {
+            throw new IllegalArgumentException("productId is required");
+        }
+        if (item.quantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -161,6 +228,49 @@ public class OrderApplicationService {
             });
         } else {
             action.run();
+        }
+    }
+
+    private void registerAfterRollback(Runnable action) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+                        action.run();
+                    }
+                }
+            });
+        } else {
+            action.run();
+        }
+    }
+
+    private void registerIdempotencyAfterCommit(UUID orderId, String idempotencyKey,
+                                                String lockToken, boolean lockHeld) {
+        registerAfterCommit(() -> orderCache.putIdempotency(idempotencyKey, orderId));
+        if (lockHeld) {
+            registerAfterCommit(() -> orderCache.releaseIdempotencyLock(idempotencyKey, lockToken));
+            registerAfterRollback(() -> orderCache.releaseIdempotencyLock(idempotencyKey, lockToken));
+        }
+    }
+
+    private Optional<OrderResponse> waitForIdempotencyResolution(String idempotencyKey) {
+        for (int attempt = 0; attempt < LOCK_WAIT_ATTEMPTS; attempt++) {
+            sleepQuietly();
+            Optional<UUID> resolved = orderCache.getIdempotency(idempotencyKey);
+            if (resolved.isPresent()) {
+                return Optional.of(self.getOrder(resolved.get()));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private void sleepQuietly() {
+        try {
+            Thread.sleep(LOCK_WAIT_POLL.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

@@ -32,14 +32,19 @@ Never manually modify production schema.
 
 ### orders
 
-| column       | type          | notes                        |
-| ------------ | ------------- | ---------------------------- |
-| id           | UUID          | primary key                  |
-| status       | VARCHAR(20)   | PENDING/PAID/SHIPPED/...     |
-| total_amount | NUMERIC(12,2) | order total                  |
-| created_at   | TIMESTAMP     | creation timestamp           |
-| updated_at   | TIMESTAMP     | last change timestamp        |
-| version      | BIGINT        | optimistic lock              |
+| column         | type          | notes                                        |
+| -------------- | ------------- | -------------------------------------------- |
+| id             | UUID          | primary key                                  |
+| status         | VARCHAR(20)   | PENDING/PAID/SHIPPED/...                     |
+| total_amount   | NUMERIC(12,2) | order total                                  |
+| created_at     | TIMESTAMP     | creation timestamp                           |
+| updated_at     | TIMESTAMP     | last change timestamp                        |
+| version        | BIGINT        | optimistic lock                              |
+| idempotency_key| VARCHAR(255)  | client idempotency key (nullable)            |
+
+A unique index `idx_orders_idempotency_key` on `orders(idempotency_key)` enforces
+idempotency at the persistence layer. Because PostgreSQL unique indexes allow
+multiple NULL values, orders created without a key are unaffected.
 
 ### order_items
 
@@ -71,12 +76,20 @@ Never manually modify production schema.
 Redis has two meaningful production uses in the Order Service:
 
 ### 1. Short-lived order-response cache
+coordination for order creation
 
-Order responses are cached under `orders:{orderId}` with a 5-minute TTL to
-reduce database load on frequent order lookups. The cache is evicted whenever
-an order's state changes (e.g. cancellation) so stale data is never served.
+A client-supplied `Idempotency-Key` header is mapped to the created order id
+under `idempotency:{key}` with a 24-hour TTL. Retried create requests return
+the original order instead of creating a duplicate, which prevents double
+orders from retries or timeouts.
 
-### 2. Idempotency store for order creation
+Concurrent create requests for the same key are serialized with a short-lived
+coordination lock held under `idempotency:lock:{key}` with a 15-second TTL.
+
+All Redis operations are best-effort: when Redis is unavailable, reads degrade
+to empty and writes become no-ops. The database unique index on
+`orders(idempotency_key)` remains the correctness authority, so idempotency is
+still enforced without Redirder creation
 
 A client-supplied `Idempotency-Key` header is mapped to the created order id
 under `idempotency:{key}` with a 24-hour TTL. Retried create requests return

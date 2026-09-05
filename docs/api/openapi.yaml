@@ -52,7 +52,12 @@ paths:
         - name: Idempotency-Key
           in: header
           required: false
-          description: Client-supplied key to make order creation idempotent.
+          description: >
+            Client-supplied key that makes order creation idempotent. Reusing
+            the same key returns the original order instead of creating a
+            duplicate, and inventory is reserved only once. Reusing a key with a
+            different payload still returns the original order and never creates
+            a new order.
           schema:
             type: string
       requestBody:

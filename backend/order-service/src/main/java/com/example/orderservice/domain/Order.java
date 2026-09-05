@@ -48,15 +48,23 @@ public class Order {
     @Column(nullable = false)
     private long version;
 
+    @Column(name = "idempotency_key")
+    private String idempotencyKey;
+
     protected Order() {
     }
 
     public Order(UUID id) {
+        this(id, null);
+    }
+
+    public Order(UUID id, String idempotencyKey) {
         this.id = id;
         this.status = OrderStatus.PENDING;
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
         this.totalAmount = BigDecimal.ZERO;
+        this.idempotencyKey = idempotencyKey;
     }
 
     public void addItem(UUID productId, String productName, BigDecimal unitPrice, int quantity) {
@@ -115,6 +123,10 @@ public class Order {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
     public Instant getUpdatedAt() {
