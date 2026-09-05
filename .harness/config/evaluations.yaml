@@ -1,0 +1,52 @@
+version: 1
+
+project:
+  name: order-system
+  language: java
+  framework: spring-boot
+  frontend: react-typescript
+
+verification:
+  command: ./scripts/verify.sh
+  success_exit_code: 0
+
+evaluations:
+
+  - id: 001
+    name: order-system-mvp
+    category: functional
+    difficulty: medium
+    status: baseline
+
+  - id: 002
+    name: order-cancellation
+    category: business-rule
+    difficulty: medium
+    status: active
+
+  - id: 003
+    name: inventory-concurrency
+    category: concurrency
+    difficulty: hard
+    status: active
+
+  - id: 004
+    name: order-idempotency
+    category: reliability
+    difficulty: hard
+    status: active
+
+  - id: 005
+    name: regression
+    category: regression
+    difficulty: hard
+    status: active
+
+metrics:
+  - task_success
+  - human_intervention
+  - verification_attempts
+  - self_repair_iterations
+  - architecture_violations
+  - regression_failures
+  - duration_seconds
