@@ -1,237 +1,242 @@
-# Engineering Harness
+# Order System Engineering Rules
 
-## Purpose
+## 1. Purpose
 
-This repository is an AI-assisted enterprise software project.
+This repository uses Harness Engineering with GitHub Copilot Custom
+Agents.
 
-Agents must treat this file as the top-level engineering contract.
+The goal is to make software changes:
+
+- understandable
+- testable
+- reviewable
+- machine-verifiable
+- safe to evolve
+
+The Harness is based on:
+
+Task
+→ Agent
+→ Code
+→ Verification
+→ Feedback
+→ Repair
 
 ---
 
-# 1. Before Changing Code
+# 2. Mandatory Rules
 
-Before modifying any code:
+Before implementing a non-trivial task:
 
 1. Read this file.
-2. Locate and read the nearest applicable AGENTS.md.
-3. Read relevant architecture documentation.
-4. Search the repository for existing implementations.
-5. Reuse existing abstractions before creating new ones.
-6. Identify affected tests.
-7. Identify API/database compatibility requirements.
-
-Do not start coding immediately after reading only the user request.
+2. Read relevant `.github/instructions/`.
+3. Identify the relevant `.harness/evaluations/`.
+4. Identify the relevant `.harness/tasks/`.
+5. Inspect existing implementation before changing it.
 
 ---
 
-# 2. Architecture Principles
+# 3. Agent Roles
+
+The repository uses these Custom Agents:
+
+## Order System
+
+Orchestrator.
+
+Primary entry point for multi-agent development.
+
+## Planner
+
+Produces evidence-based implementation plans.
+
+Does not modify production code.
+
+## Backend
+
+Implements backend changes.
+
+## Frontend
+
+Implements frontend changes.
+
+## Test
+
+Adds and executes automated tests.
+
+## Reviewer
+
+Performs independent review.
+
+Does not modify production code.
+
+---
+
+# 4. Engineering Principles
 
 Prefer:
 
-API
- ↓
-Application
- ↓
-Domain
- ↓
-Infrastructure
-
-Do not bypass architectural layers without a documented reason.
+- existing architecture
+- existing patterns
+- small focused changes
+- explicit business rules
+- deterministic verification
+- meaningful automated tests
 
 Avoid:
 
-- duplicate abstractions
-- unnecessary frameworks
-- speculative refactoring
-- unrelated cleanup
-- breaking API changes without explicit approval
+- unnecessary rewrites
+- speculative abstractions
+- unrelated refactors
+- test-specific hacks
 
 ---
 
-# 3. API Contract
+# 5. Backend Rules
 
-OpenAPI is the source of truth for public REST APIs.
+Follow the existing architecture.
 
-When an API changes:
+Typical layering:
 
-1. Update OpenAPI.
-2. Update backend.
-3. Update frontend client/types.
-4. Update integration tests.
-5. Verify compatibility.
+Controller
+→ Service
+→ Repository
+→ Database
 
-Agents must not independently invent API contracts.
+Business logic should not be placed directly in controllers.
+
+Pay particular attention to:
+
+- transaction boundaries
+- state transitions
+- concurrency
+- idempotency
+- data consistency
 
 ---
 
-# 4. Database
+# 6. Frontend Rules
 
-PostgreSQL is the source of truth for persistent business data.
+Follow the existing React architecture.
 
-All schema changes require migrations.
+Reuse:
+
+- existing components
+- existing API abstractions
+- existing state management patterns
+
+Important UI flows should handle:
+
+- loading
+- success
+- empty
+- error
+
+---
+
+# 7. Testing Rules
+
+Tests are part of the product contract.
 
 Never:
 
-- modify production schema manually
-- delete production data
-- bypass migration tooling
-- introduce destructive changes without explicit approval
+- delete tests to hide failures
+- weaken assertions
+- skip failing tests
+- disable verification
+- add test-specific hard-coded behavior
+
+When a test fails:
+
+1. understand the failure
+2. determine whether implementation is wrong
+3. fix implementation
+4. rerun tests
+5. rerun full verification
 
 ---
 
-# 5. Testing
+# 8. Harness Rules
 
-Use the smallest appropriate verification level:
+Do not modify Harness evaluation criteria merely to make an implementation
+pass.
 
-Unit
- ↓
-Integration
- ↓
-API Contract
- ↓
-E2E
+Do not modify:
 
-User-visible behavior should have E2E coverage where practical.
+- `.harness/evaluations/`
+- `.harness/tasks/`
+- `scripts/verify.sh`
 
----
+unless the task explicitly concerns the Harness itself.
 
-# 6. Verification
-
-Before declaring a task complete:
-
-    ./scripts/verify.sh
-
-A successful compilation is NOT sufficient evidence.
-
-The final response must report:
-
-- implementation summary
-- files changed
-- tests executed
-- verification result
-- known risks
+When changing Harness definitions intentionally, the change must be
+reviewed as an engineering change.
 
 ---
 
-# 7. Definition of Done
+# 9. Verification
 
-A task is complete only when:
-
-- requirement implemented
-- architecture respected
-- tests updated
-- relevant tests pass
-- API contract valid
-- database migration valid
-- frontend builds
-- E2E passes where applicable
-- no unrelated changes introduced
-- full verification passes
-
----
-
-# 8. Agent Behavior
-
-Agents should:
-
-- inspect before editing
-- make minimal changes
-- reuse existing patterns
-- preserve compatibility
-- verify their changes
-- fix failures instead of bypassing them
-
-Agents must NOT:
-
-- disable tests
-- weaken validation merely to make tests pass
-- remove failing assertions without justification
-- silently change requirements
-- make unrelated refactors
-
----
-
-# 9. Evidence
-
-Do not say:
-
-"Implemented successfully."
-
-Instead provide evidence:
-
-Command:
-    ./scripts/verify.sh
-
-Result:
-    PASS
-
-Tests:
-    128 passed
-
-E2E:
-    14 passed
-
-The repository state and verification output are the source of truth.
-
-# Harness Engineering Governance
-This repository uses a repository-native Harness to evaluate AI-assisted software development.
-
-## Canonical verification
 The canonical verification command is:
 
 ./scripts/verify.sh
 
-An implementation task is complete only when this command returns exit code 0.
+Focused tests may be executed during development.
 
-## Evaluation ownership
-The following directories contain evaluation contracts:
+However, the task is not complete until:
 
-- .harness/evaluations/
-- .harness/tasks/
-During normal implementation these files are read-only.
+./scripts/verify.sh
 
-Agents must not modify evaluation criteria merely to make an implementation pass.
+passes.
 
-## Verification ownership
-Verification scripts are executable engineering contracts.
+The verification result is authoritative.
 
-Agents must not:
+---
 
-- disable verification
-- remove verification steps
-- weaken assertions
-- hide failures
-- change verification behavior merely to make a task pass
-- delete tests to avoid failures
+# 10. Definition of Done
 
-## Failure recovery
-When verification fails:
+A feature is complete only when:
 
-1. read the failure
-2. identify the root cause
-3. fix the implementation
-4. run verification again
-5. repeat until passing
-Do not bypass a failing verification step.
+- implementation is complete
+- relevant tests exist
+- review is complete
+- full Harness verification passes
 
-## Engineering principle
-Tests and verification are feedback mechanisms, not obstacles.
+Expected final state:
 
-The preferred development loop is:
+HARNESS VERIFY: PASS
 
-Read
-↓
-Understand
-↓
-Implement
-↓
-Verify
-↓
-Diagnose
-↓
-Fix
-↓
-Verify again
+---
 
-## Definition of done
-A task is complete only when the implementation satisfies the evaluation criteria and the canonical verification command passes.
+# 11. Multi-Agent Workflow
+
+The normal workflow is:
+
+User
+→ Order System
+→ Planner
+→ Backend / Frontend
+→ Test
+→ Reviewer
+→ verify.sh
+→ PASS
+
+If verification fails:
+
+FAIL
+→ identify responsible agent
+→ repair
+→ verify.sh again
+
+---
+
+# 12. Keep Harness Simple
+
+This project intentionally does not use:
+
+- baseline evaluation
+- performance benchmarking
+- token/cost scoring
+- execution-time scoring
+- unnecessary LLM judging
+
+The primary goal is reliable functional and engineering verification.

@@ -1,35 +1,23 @@
-version: 1
-
-project:
-  name: order-system
-
-verification:
-  command: ./scripts/verify.sh
-  success_exit_code: 0
-
 evaluations:
-
   - id: 001
     name: order-system-mvp
-    category: functional
-    status: active
+    file: .harness/evaluations/001-order-system-mvp.md
 
   - id: 002
     name: order-cancellation
-    category: business-rule
-    status: active
+    file: .harness/evaluations/002-order-cancellation.md
 
   - id: 003
     name: inventory-concurrency
-    category: concurrency
-    status: active
+    file: .harness/evaluations/003-inventory-concurrency.md
 
   - id: 004
     name: order-idempotency
-    category: reliability
-    status: active
+    file: .harness/evaluations/004-order-idempotency.md
 
   - id: 005
     name: regression
-    category: regression
-    status: active
+    file: .harness/evaluations/005-regression.md
+
+verification:
+  command: ./scripts/verify.sh
