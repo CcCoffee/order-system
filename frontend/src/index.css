@@ -1,6 +1,10 @@
+@import "tailwindcss";
+
 /* Order System — Apple-style web UI design language
    Centralized design tokens defined once in :root, overridden in dark mode.
-   Both the create-order and order-detail pages consume these shared tokens. */
+   Both the create-order and order-detail pages consume these shared tokens.
+   Tailwind CSS v4 is used for layout utilities; the token-driven semantic
+   classes below keep the rendered page consistent, accessible and testable. */
 
 :root {
   color-scheme: light;
@@ -23,6 +27,7 @@
   --space-3: 24px;
   --space-4: 40px;
   --space-5: 64px;
+  --card-padding: 48px;
 
   /* Layout */
   --content-max-width: 980px;
@@ -53,7 +58,7 @@
   --focus-ring: #0071e3;
   --disabled-bg: #d2d2d7;
   --disabled-text: #86868b;
-  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.03);
 
   /* Status tokens (contrast-safe) */
   --status-pending-bg: #fff3e0;
@@ -95,7 +100,7 @@
     --focus-ring: #2997ff;
     --disabled-bg: #3a3a3c;
     --disabled-text: #6e6e73;
-    --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
 
     --status-pending-bg: #2b2100;
     --status-pending-text: #ffd60a;
@@ -139,7 +144,7 @@ body {
 }
 
 .app-header {
-  padding: var(--space-4) 0;
+  padding: var(--space-5) 0 var(--space-4);
 }
 
 .brand {
@@ -165,8 +170,17 @@ body {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  padding: var(--space-4);
+  padding: var(--card-padding);
   box-shadow: var(--shadow-card);
+}
+
+/* Card hero (page title + subtitle) */
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: var(--text-lg);
+  line-height: var(--line-height-body);
+  margin: 0 0 var(--space-3);
+  max-width: 42em;
 }
 
 /* Typography */
@@ -188,6 +202,7 @@ h2 {
 
 p {
   margin: 0 0 var(--space-2);
+  text-wrap: pretty;
 }
 
 /* Forms */
@@ -351,6 +366,25 @@ td {
   border-bottom: 1px solid var(--border-default);
 }
 
+thead th {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Numeric columns align right for a refined, tabular feel */
+th:nth-child(n + 2),
+td:nth-child(n + 2) {
+  text-align: right;
+}
+
 /* Form fields */
 .field {
   display: flex;
@@ -381,15 +415,26 @@ td {
   word-break: break-all;
 }
 
+/* Order total */
+.order-total {
+  font-size: var(--text-lg);
+  margin: var(--space-3) 0 var(--space-2);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   :root {
     --text-title-1: 34px;
     --text-title-2: 26px;
+    --card-padding: 28px;
   }
 
   .app {
     padding: var(--space-2) var(--content-padding-x) var(--space-4);
+  }
+
+  .app-header {
+    padding: var(--space-4) 0 var(--space-3);
   }
 
   .row {

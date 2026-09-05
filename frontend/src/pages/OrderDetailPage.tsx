@@ -75,30 +75,32 @@ export default function OrderDetailPage() {
           {order.status}
         </span>
       </p>
-      <h2>Order Items</h2>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Unit Price</th>
-              <th>Qty</th>
-              <th>Line Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items.map((item) => (
-              <tr key={item.productId}>
-                <td>{item.productName}</td>
-                <td>${item.unitPrice.toFixed(2)}</td>
-                <td>{item.quantity}</td>
-                <td>${item.lineTotal.toFixed(2)}</td>
+      <section className="mt-10">
+        <h2>Order Items</h2>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Unit Price</th>
+                <th>Qty</th>
+                <th>Line Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p>
+            </thead>
+            <tbody>
+              {order.items.map((item) => (
+                <tr key={item.productId}>
+                  <td>{item.productName}</td>
+                  <td>${item.unitPrice.toFixed(2)}</td>
+                  <td>{item.quantity}</td>
+                  <td>${item.lineTotal.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <p className="order-total">
         <strong>Total: ${order.totalAmount.toFixed(2)}</strong>
       </p>
       {error && <div className="error">{error}</div>}
@@ -108,7 +110,7 @@ export default function OrderDetailPage() {
         </button>
       )}
       <p>
-        <Link to="/">Back</Link>
+        <Link to="/">Back to orders</Link>
       </p>
     </div>
   );
