@@ -73,28 +73,32 @@ multiple NULL values, orders created without a key are unaffected.
 
 ## Redis
 
-Redis has two meaningful production uses in the Order Service:
+Redis is used for three meaningful production concerns in the Order Service. All
+Redis operations are best-effort; the database remains the correctness authority.
 
-### 1. Short-lived order-response cache
-coordination for order creation
+### Order-response cache
+
+Order responses are cached under `orders:{orderId}` with a 5-minute TTL. The
+cache is evicted whenever an order's state changes (for example, on
+cancellation), so stale responses are not returned.
+
+### Order creation idempotency
 
 A client-supplied `Idempotency-Key` header is mapped to the created order id
-under `idempotency:{key}` with a 24-hour TTL. Retried create requests return
-the original order instead of creating a duplicate, which prevents double
-orders from retries or timeouts.
+under `idempotency:{key}` with a 24-hour TTL. Retried create requests return the
+original order instead of creating a duplicate, which prevents double orders
+from retries or timeouts.
+
+### Coordination lock
 
 Concurrent create requests for the same key are serialized with a short-lived
-coordination lock held under `idempotency:lock:{key}` with a 15-second TTL.
+coordination lock held under `idempotency:lock:{key}` with a 15-second TTL. The
+lock is acquired with `SET NX` and released with a token compare-and-delete, so
+only the holder can release it.
+
+### Best-effort behavior
 
 All Redis operations are best-effort: when Redis is unavailable, reads degrade
 to empty and writes become no-ops. The database unique index on
 `orders(idempotency_key)` remains the correctness authority, so idempotency is
-still enforced without Redirder creation
-
-A client-supplied `Idempotency-Key` header is mapped to the created order id
-under `idempotency:{key}` with a 24-hour TTL. Retried create requests return
-the original order instead of creating a duplicate, which prevents double
-orders from retries or timeouts.
-
-Redis is not used merely because the stack includes it; it solves real
-consistency and performance concerns as described above.
+still enforced even when Redis is unavailable.
