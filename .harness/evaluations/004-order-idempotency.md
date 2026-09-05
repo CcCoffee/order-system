@@ -7,61 +7,82 @@ duplicate orders or duplicate inventory reservations.
 
 ## Scenario
 
-A client submits an order request with an idempotency key:
+A client submits an order request with an idempotency key, e.g. `order-demo-001`,
+then retries the same request multiple times, including concurrently.
 
-`order-demo-001`
+## Acceptance Criteria
 
-The client then retries the same request multiple times.
+### AC-1 Same key does not create multiple orders
+For the same idempotency key, the system must not create multiple orders.
 
-## Required behavior
+### AC-2 Inventory reserved only once
+For the same idempotency key, inventory must only be reserved once.
 
-For the same idempotency key:
+### AC-3 Same logical result returned to repeated callers
+Repeated callers with the same key receive the same logical result.
 
-1. The system must not create multiple orders.
-2. Inventory must only be reserved once.
-3. The same logical result should be returned to repeated callers.
-4. Concurrent duplicate requests must also be handled safely.
+### AC-4 Concurrent duplicate requests are handled safely
+Concurrent duplicate requests with the same key must not create duplicate orders
+or duplicate reservations.
 
-## Redis requirement
+### AC-5 Redis is used meaningfully for idempotency
+Redis coordinates/stores idempotency state. The implementation documents the key
+format, TTL, stored value, duplicate request behavior, and concurrency behavior.
 
-Redis should be used meaningfully for idempotency coordination/state.
+### AC-6 No permanent block from a failed DB transaction
+The system must avoid a situation where Redis reports success but the database
+transaction fails, permanently blocking subsequent requests. The consistency
+strategy is documented.
 
-The implementation must document:
+## Required Evidence
 
-- key format
-- TTL
-- stored value
-- duplicate request behavior
-- concurrency behavior
+Every acceptance criterion MUST have corresponding evidence.
 
-## Failure handling
+| Criterion | Required Evidence |
+|---|---|
+| AC-1 | Integration/API test submitting the same request twice and asserting one order |
+| AC-2 | Integration/API test asserting inventory reserved once |
+| AC-3 | API test asserting identical response for repeated calls |
+| AC-4 | Concurrent duplicate request integration test against real PostgreSQL |
+| AC-5 | Integration test + documentation of Redis idempotency design |
+| AC-6 | Test/documentation asserting the failure handling strategy |
 
-The implementation must avoid a situation where:
-
-1. Redis says request succeeded
-2. database transaction fails
-3. subsequent requests are permanently blocked
-
-The chosen consistency strategy must be documented.
-
-## Required tests
+## Required Tests
 
 At minimum:
 
-- same request submitted twice
-- same request submitted many times
-- concurrent duplicate requests
-- same idempotency key with different request payload
-- Redis unavailable behavior
+1. Same request submitted twice.
+2. Same request submitted many times.
+3. Concurrent duplicate requests.
+4. Same idempotency key with a different request payload.
+5. Redis unavailable behavior.
 
-## Architecture constraints
+## Architecture Constraints
 
 Idempotency logic must not be implemented directly inside controllers.
 
+## Regression Requirements
+
+Order creation, inventory reservation, and existing verification must remain
+intact.
+
 ## Verification
 
-The evaluation passes only when:
+The repository must pass:
 
-`./scripts/verify.sh`
+```
+./scripts/verify.sh
+```
 
-returns exit code `0`.
+Repository verification does not substitute for missing Evaluation evidence.
+
+## Forbidden Shortcuts
+
+- Weakening tests
+- Deleting tests
+- Skipping failures
+- Replacing required integration tests with mocks
+- Replacing required concurrency with sequential execution
+- Modifying Evaluation criteria to reduce requirements
+- Modifying verification scripts to hide failures
+- Hard-coding test-specific production behavior

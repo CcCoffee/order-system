@@ -97,7 +97,7 @@ After all concurrent requests complete:
 
 ---
 
-## Required Concurrency Evidence
+## Required Evidence
 
 The evaluation MUST contain executable evidence that exercises actual
 database concurrency.
@@ -283,6 +283,11 @@ produce an explicit mapping:
 | AC-3 Atomic concurrency       | Overlapping transaction scenario                            | PASS/FAIL |
 | AC-4 Failed order rollback    | Failed-order integration test + DB state assertions         | PASS/FAIL |
 | AC-5 Database consistency     | Post-concurrency DB assertions                              | PASS/FAIL |
+
+The authoritative executable evidence for every criterion must come from a
+real-PostgreSQL concurrency integration test class:
+
+`com.example.orderservice.integration.InventoryConcurrencyIntegrationTest`
 
 Every criterion must have evidence.
 
