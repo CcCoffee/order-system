@@ -22,6 +22,6 @@ fi
 MVN="mvn"
 fi
 
-echo "Running backend tests..."
+echo "Running backend tests and Checkstyle..."
 
-"$MVN" test
+"$MVN" verify

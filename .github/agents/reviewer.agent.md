@@ -71,6 +71,8 @@ Ask:
 - Are failures handled correctly?
 - Are tests meaningful?
 - Are there hidden shortcuts designed only to satisfy tests?
+- Does the change bypass the repository Checkstyle configuration or weaken
+  verification rules to achieve a PASS?
 
 ---
 

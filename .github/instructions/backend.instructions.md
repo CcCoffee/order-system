@@ -61,3 +61,12 @@ Prefer:
 - integration tests for database/Redis behavior
 - API tests for HTTP contracts
 - E2E tests for critical user journeys
+
+## Code Style
+
+Backend Java code must pass the repository Checkstyle configuration
+(`backend/checkstyle.xml`), enforced by `mvn verify` and `./scripts/verify.sh`.
+
+Do not bypass Checkstyle to make verification pass. Checkstyle only enforces
+mechanical Java source style; architecture layering, business rules, and
+runtime behavior are verified elsewhere.

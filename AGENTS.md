@@ -952,6 +952,20 @@ Database modifications must consider:
 * transaction behavior
 * existing data
 
+## Code style (Checkstyle)
+
+Backend Java code must satisfy the repository Checkstyle configuration
+(`backend/checkstyle.xml`), which is enforced as part of `mvn verify` and the
+canonical `./scripts/verify.sh`.
+
+* Agents must not bypass Checkstyle (for example with `-Dcheckstyle.skip=true`,
+  removing the check, or weakening rules) to make verification pass.
+* If a Checkstyle rule conflicts with an explicit architecture or framework
+  requirement, investigate the rule before changing production code.
+* Checkstyle covers mechanical Java source style only. It is not a substitute
+  for architecture verification, business-logic tests, API checks, or
+  infrastructure checks.
+
 ---
 
 # 21. Frontend Rules

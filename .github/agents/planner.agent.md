@@ -42,6 +42,9 @@ downstream Backend, Frontend, Test, and Reviewer agents can execute.
 5. Every important requirement must have a verification strategy.
 6. Every proposed change must identify its affected layer.
 7. Do not modify production code.
+8. For backend changes, the plan must include satisfying the repository
+   Checkstyle configuration (`backend/checkstyle.xml`) as an acceptance
+   criterion.
 
 ---
 

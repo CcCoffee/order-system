@@ -69,6 +69,10 @@ The final completion condition is:
 
 returning success.
 
+For backend changes this includes the repository Checkstyle configuration
+(`backend/checkstyle.xml`), which runs via `mvn verify` through
+`scripts/verify-backend.sh`.
+
 ---
 
 # Global Rules

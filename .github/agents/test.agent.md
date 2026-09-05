@@ -40,6 +40,9 @@ You must not change production behavior merely to make tests pass.
 9. Run ./scripts/verify.sh when appropriate.
 10. Report every failure clearly.
 
+Backend Maven verification is the `verify` lifecycle (`mvn verify`), which runs
+the backend test suite and the repository Checkstyle configuration together.
+
 ---
 
 # Testing Priority

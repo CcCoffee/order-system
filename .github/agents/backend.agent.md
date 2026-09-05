@@ -113,6 +113,9 @@ Prefer:
 - integration tests for persistence and transaction behavior
 - API tests for endpoint behavior
 
+Backend Java code must satisfy the repository Checkstyle configuration
+(`backend/checkstyle.xml`). Do not bypass Checkstyle to make verification pass.
+
 Do not modify tests merely to make implementation pass.
 
 ---
@@ -136,10 +139,11 @@ Never:
 Before reporting completion:
 
 1. Backend tests pass.
-2. No unrelated files were changed.
-3. Implementation matches the approved plan.
-4. Existing behavior remains compatible.
-5. Known limitations are explicitly reported.
+2. Backend code passes the repository Checkstyle configuration.
+3. No unrelated files were changed.
+4. Implementation matches the approved plan.
+5. Existing behavior remains compatible.
+6. Known limitations are explicitly reported.
 
 ---
 
