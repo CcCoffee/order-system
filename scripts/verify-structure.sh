@@ -14,8 +14,6 @@ required_paths=(
 ".harness"
 ".harness/evaluations"
 ".harness/tasks"
-".harness/reports"
-".harness/state"
 "backend"
 "frontend"
 "infra/docker"
