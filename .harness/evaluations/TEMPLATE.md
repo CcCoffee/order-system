@@ -1,41 +1,62 @@
-# Independent Evaluation
+# Evaluation XXXX —
 
-## Task
+## Objective
+Describe the capability being evaluated.
 
-TASK-XXXX
+## Scenario
+Describe the initial state and important conditions.
 
-## Requirement
+## Acceptance Criteria
 
-PASS / FAIL
+### AC-1
+Describe the required behavior.
 
-## Backend
+### AC-2
+Describe the required behavior.
 
-PASS / FAIL
+## Required Evidence
+Every acceptance criterion MUST have corresponding evidence.
 
-## Frontend
+| Criterion | Required Evidence |
+|---|---|
+| AC-1 |  |
+| AC-2 |  |
 
-PASS / FAIL
+## Required Tests
+List the tests required to produce the evidence.
 
-## API Contract
+## Architecture Constraints
+Describe only architecture constraints relevant to correctness,
+maintainability, or explicit project design.
 
-PASS / FAIL
+## Regression Requirements
+Describe related existing behavior that must remain intact.
 
-## Database
+## Verification
+The repository must pass:
 
-PASS / FAIL
+```
+./scripts/verify.sh
+```
+Repository verification does not substitute for missing Evaluation
+evidence.
 
-## Security
+## Forbidden Shortcuts
 
-PASS / FAIL
+- Weakening tests
+- Deleting tests
+- Skipping failures
+- Replacing required integration tests with mocks
+- Replacing required concurrency with sequential execution
+- Modifying Evaluation criteria to reduce requirements
+- Modifying verification scripts to hide failures
+- Hard-coding test-specific production behavior
 
-## Regression
+## Completion Rule
+The Evaluation is satisfied only when:
 
-PASS / FAIL
-
-## E2E
-
-PASS / FAIL
-
-## Final Verdict
-
-APPROVE / REQUEST_CHANGES
+1. Every acceptance criterion has sufficient evidence.
+2. Required tests pass.
+3. Relevant regression tests pass.
+4. Architecture constraints are satisfied.
+5. `./scripts/verify.sh` passes.

@@ -23,14 +23,99 @@ FAILED=1
 fi
 }
 
+# ------------------------------------------------------------
+
+# Harness Specification
+
+# ------------------------------------------------------------
+
+#
+
+# Evaluation specifications are checked first because they define
+
+# the behavioral contract used by the rest of the Harness.
+
+#
+
+# This check validates the structure and completeness of Evaluation
+
+# files. It does not replace semantic Evaluation Review.
+
+#
+
+# ------------------------------------------------------------
+
+run_check "Evaluation Specifications" "verify-evaluations.sh"
+
+# ------------------------------------------------------------
+
+# Repository
+
+# ------------------------------------------------------------
+
 run_check "Repository Structure" "verify-structure.sh"
+
+# ------------------------------------------------------------
+
+# Infrastructure
+
+# ------------------------------------------------------------
+
 run_check "Infrastructure" "verify-infrastructure.sh"
+
+# ------------------------------------------------------------
+
+# Backend
+
+# ------------------------------------------------------------
+
 run_check "Backend" "verify-backend.sh"
+
+# ------------------------------------------------------------
+
+# Architecture
+
+# ------------------------------------------------------------
+
 run_check "Architecture" "verify-architecture.sh"
+
+# ------------------------------------------------------------
+
+# API
+
+# ------------------------------------------------------------
+
 run_check "API Contract" "verify-api.sh"
+
+# ------------------------------------------------------------
+
+# Integration Tests
+
+# ------------------------------------------------------------
+
 run_check "Integration Tests" "integration-test.sh"
+
+# ------------------------------------------------------------
+
+# Frontend
+
+# ------------------------------------------------------------
+
 run_check "Frontend" "verify-frontend.sh"
+
+# ------------------------------------------------------------
+
+# E2E
+
+# ------------------------------------------------------------
+
 run_check "E2E" "e2e.sh"
+
+# ------------------------------------------------------------
+
+# Final Result
+
+# ------------------------------------------------------------
 
 echo
 
