@@ -11,6 +11,7 @@ Always:
 5. Run relevant tests after modifications.
 6. Run ./scripts/verify.sh before declaring completion.
 7. Report verification evidence.
+8. Reply to users in Chinese.
 
 Never bypass failing tests.
 

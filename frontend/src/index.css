@@ -1,135 +1,342 @@
+/* Order System — Apple-style web UI design language
+   Centralized design tokens defined once in :root, overridden in dark mode.
+   Both the create-order and order-detail pages consume these shared tokens. */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  color: #1f2933;
-  background-color: #f5f7fa;
+  color-scheme: light;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --text-base: 17px;
+  --text-sm: 14px;
+  --text-lg: 21px;
+  --text-title-1: 48px;
+  --text-title-2: 32px;
+  --line-height-tight: 1.1;
+  --line-height-body: 1.47;
+  --letter-spacing-title: -0.015em;
+
+  /* Spacing */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+
+  /* Layout */
+  --content-max-width: 980px;
+  --content-padding-x: 22px;
+  --section-gap: 48px;
+
+  /* Shape */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 18px;
+  --radius-pill: 980px;
+
+  /* Controls */
+  --control-height: 48px;
+
+  /* Light color system (Apple signature) */
+  --bg-page: #f5f5f7;
+  --bg-surface: #ffffff;
+  --bg-surface-subtle: #f5f5f7;
+  --border-default: #d2d2d7;
+  --border-strong: #86868b;
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --accent-muted: rgba(0, 113, 227, 0.1);
+  --link: #0066cc;
+  --focus-ring: #0071e3;
+  --disabled-bg: #d2d2d7;
+  --disabled-text: #86868b;
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /* Status tokens (contrast-safe) */
+  --status-pending-bg: #fff3e0;
+  --status-pending-text: #8a4b00;
+  --status-cancelled-bg: #fdecec;
+  --status-cancelled-text: #c03636;
+  --status-paid-bg: #e8f2ff;
+  --status-paid-text: #0066cc;
+  --status-shipped-bg: #e9f7ec;
+  --status-shipped-text: #2f8a3b;
+  --status-loading-text: var(--text-secondary);
+
+  /* Error */
+  --error-text: #d70015;
+  --error-bg: #fff2f2;
+  --error-border: #f6d2d2;
+
+  /* Motion */
+  --transition-fast: 0.2s ease-out;
+}
+
+/* Dark appearance override */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg-page: #000000;
+    --bg-surface: #1d1d1f;
+    --bg-surface-subtle: #161617;
+    --border-default: #424245;
+    --border-strong: #6e6e73;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    /* Keep the button blue so white text keeps contrast */
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-muted: rgba(41, 151, 255, 0.16);
+    --link: #2997ff;
+    --focus-ring: #2997ff;
+    --disabled-bg: #3a3a3c;
+    --disabled-text: #6e6e73;
+    --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.5);
+
+    --status-pending-bg: #2b2100;
+    --status-pending-text: #ffd60a;
+    --status-cancelled-bg: #3a1d1d;
+    --status-cancelled-text: #ff6961;
+    --status-paid-bg: #12263a;
+    --status-paid-text: #64d2ff;
+    --status-shipped-bg: #10341b;
+    --status-shipped-text: #30d158;
+
+    --error-text: #ff6961;
+    --error-bg: #2c1414;
+    --error-border: #5a2424;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout */
 .app {
-  max-width: 960px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 0 16px 48px;
+  padding: var(--space-3) var(--content-padding-x) var(--space-5);
 }
 
 .app-header {
-  padding: 24px 0;
+  padding: var(--space-4) 0;
 }
 
 .brand {
-  font-size: 1.5rem;
+  font-size: var(--text-lg);
   font-weight: 700;
-  color: #2563eb;
+  color: var(--link);
   text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.brand:hover {
+  text-decoration: underline;
 }
 
 .app-main {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--section-gap);
 }
 
+/* Cards / panels */
 .card {
-  background: #ffffff;
-  border: 1px solid #e4e7eb;
-  border-radius: 10px;
-  padding: 24px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
 }
 
-h1,
+/* Typography */
+h1 {
+  font-size: var(--text-title-1);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-title);
+  line-height: var(--line-height-tight);
+  margin: 0 0 var(--space-2);
+}
+
 h2 {
-  margin-top: 0;
+  font-size: var(--text-title-2);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-title);
+  line-height: var(--line-height-tight);
+  margin: 0 0 var(--space-2);
 }
 
+p {
+  margin: 0 0 var(--space-2);
+}
+
+/* Forms */
 label {
   display: block;
   font-weight: 500;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-1);
+  color: var(--text-primary);
 }
 
 select,
 input[type='number'] {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #cbd2d9;
-  border-radius: 6px;
-  font-size: 1rem;
+  height: var(--control-height);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
+select:focus-visible,
+input[type='number']:focus-visible {
+  outline: none;
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 4px var(--accent-muted);
+}
+
+/* Buttons */
 button {
-  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #ffffff;
   border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 1rem;
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 500;
+  font-family: var(--font-sans);
   cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 button:disabled {
-  background: #9aa5b1;
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 button.secondary {
-  background: #f0f2f5;
-  color: #1f2933;
-  border: 1px solid #cbd2d9;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border-default);
 }
 
-.row {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
+button.secondary:hover:not(:disabled) {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
+/* Status badges */
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
+  line-height: var(--line-height-tight);
 }
 
 .status-PENDING {
-  background: #fff7e6;
-  color: #ad6800;
+  background: var(--status-pending-bg);
+  color: var(--status-pending-text);
 }
 
 .status-CANCELLED {
-  background: #fde8e8;
-  color: #b91c1c;
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
 }
 
 .status-PAID {
-  background: #e6f4ff;
-  color: #0958d9;
+  background: var(--status-paid-bg);
+  color: var(--status-paid-text);
 }
 
 .status-SHIPPED {
-  background: #f6ffed;
-  color: #389e0d;
-}
-
-.error {
-  color: #b91c1c;
-  background: #fde8e8;
-  border: 1px solid #f5c2c2;
-  border-radius: 6px;
-  padding: 10px 12px;
+  background: var(--status-shipped-bg);
+  color: var(--status-shipped-text);
 }
 
 .status-loading {
-  color: #4b5563;
+  color: var(--status-loading-text);
+}
+
+/* Error / empty states */
+.error {
+  color: var(--error-text);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.empty-state {
+  color: var(--text-secondary);
+  padding: var(--space-3) 0;
+}
+
+/* Links */
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
 }
 
 table {
@@ -140,6 +347,66 @@ table {
 th,
 td {
   text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid #e4e7eb;
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Form fields */
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Form row: balanced column proportions (product : quantity : action) */
+.row {
+  display: grid;
+  grid-template-columns: 3fr 2fr auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+}
+
+/* Order ID (smaller, lighter, monospaced, breakable) */
+.order-id {
+  font-family: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-2);
+  word-break: break-all;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  :root {
+    --text-title-1: 34px;
+    --text-title-2: 26px;
+  }
+
+  .app {
+    padding: var(--space-2) var(--content-padding-x) var(--space-4);
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Dark-appearance secondary action override (must follow the base rule so it
+   wins the cascade): use the brighter link blue so the accent text stays
+   >= 4.5:1 on the dark card (#1d1d1f). */
+@media (prefers-color-scheme: dark) {
+  button.secondary,
+  button.secondary:hover:not(:disabled) {
+    color: var(--link);
+  }
 }

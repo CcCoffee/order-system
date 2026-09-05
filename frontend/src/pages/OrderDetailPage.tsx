@@ -53,6 +53,7 @@ export default function OrderDetailPage() {
   if (error && !order) {
     return (
       <div className="card">
+        <h1>Order not found</h1>
         <div className="error">{error}</div>
         <p>
           <Link to="/">Back to orders</Link>
@@ -67,30 +68,36 @@ export default function OrderDetailPage() {
 
   return (
     <div className="card">
-      <h1>Order {order.id}</h1>
+      <h1>Order</h1>
+      <p className="order-id">{order.id}</p>
       <p>
-        <span className={`status-badge status-${order.status}`}>{order.status}</span>
+        <span role="status" className={`status-badge status-${order.status}`}>
+          {order.status}
+        </span>
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Unit Price</th>
-            <th>Qty</th>
-            <th>Line Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.items.map((item) => (
-            <tr key={item.productId}>
-              <td>{item.productName}</td>
-              <td>${item.unitPrice.toFixed(2)}</td>
-              <td>{item.quantity}</td>
-              <td>${item.lineTotal.toFixed(2)}</td>
+      <h2>Order Items</h2>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Unit Price</th>
+              <th>Qty</th>
+              <th>Line Total</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {order.items.map((item) => (
+              <tr key={item.productId}>
+                <td>{item.productName}</td>
+                <td>${item.unitPrice.toFixed(2)}</td>
+                <td>{item.quantity}</td>
+                <td>${item.lineTotal.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p>
         <strong>Total: ${order.totalAmount.toFixed(2)}</strong>
       </p>

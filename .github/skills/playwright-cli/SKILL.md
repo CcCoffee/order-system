@@ -97,10 +97,15 @@ playwright-cli mousewheel 0 100
 ```bash
 playwright-cli screenshot
 playwright-cli screenshot e5
-playwright-cli screenshot --filename=page.png
+playwright-cli screenshot --filename=.playwright-cli/page.png
 playwright-cli screenshot --hires
-playwright-cli pdf --filename=page.pdf
+playwright-cli pdf --filename=.playwright-cli/page.pdf
 ```
+
+> **产物保存规则**：截图（`screenshot`/`pdf`/`snapshot`）等产物必须写入
+> `.playwright-cli/` 工作目录，不要随意散落到项目目录。默认输出已经落在
+> `.playwright-cli/`；使用 `--filename=` 时务必以 `.playwright-cli/` 作为路径前缀
+> （例如 `--filename=.playwright-cli/page.png`），保持项目目录整洁。
 
 ### Tabs
 
@@ -275,11 +280,11 @@ After each command, playwright-cli provides a snapshot of the current browser st
 You can also take a snapshot on demand using `playwright-cli snapshot` command. All the options below can be combined as needed.
 
 ```bash
-# default - save to a file with timestamp-based name
+# default - save to a file with timestamp-based name in `.playwright-cli/`
 playwright-cli snapshot
 
 # save to file, use when snapshot is a part of the workflow result
-playwright-cli snapshot --filename=after-click.yaml
+playwright-cli snapshot --filename=.playwright-cli/after-click.yaml
 
 # snapshot an element instead of the whole page
 playwright-cli snapshot "#main"
@@ -296,6 +301,10 @@ playwright-cli snapshot --boxes
 playwright-cli find "Add to cart"
 playwright-cli find --regex "\\$[0-9]+\\.[0-9]{2}"
 ```
+
+> **Snapshot 文件位置规则**：`.yml` 快照文件默认以时间戳命名保存在 `.playwright-cli/`
+> 目录。请始终保留在该目录，不要重定向到项目目录；使用 `--filename=` 时加上
+> `.playwright-cli/` 前缀（例如 `--filename=.playwright-cli/after-click.yaml`）。
 
 ## Targeting elements
 

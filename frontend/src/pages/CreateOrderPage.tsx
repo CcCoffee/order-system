@@ -68,10 +68,13 @@ export default function CreateOrderPage() {
       {error && <div className="error">{error}</div>}
       {loading ? (
         <p className="status-loading">Loading products...</p>
+      ) : products.length === 0 ? (
+        <p className="empty-state">No products available.</p>
       ) : (
         <>
+          <h2>Add Items</h2>
           <div className="row">
-            <div style={{ flex: 2 }}>
+            <div className="field">
               <label htmlFor="product">Product</label>
               <select
                 id="product"
@@ -85,7 +88,7 @@ export default function CreateOrderPage() {
                 ))}
               </select>
             </div>
-            <div style={{ flex: 1 }}>
+            <div className="field">
               <label htmlFor="quantity">Quantity</label>
               <input
                 id="quantity"
@@ -101,30 +104,34 @@ export default function CreateOrderPage() {
           </div>
 
           {cart.length > 0 && (
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((item) => {
-                  const product = products.find((p) => p.id === item.productId);
-                  return (
-                    <tr key={item.productId}>
-                      <td>{product?.name ?? item.productId}</td>
-                      <td>{item.quantity}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map((item) => {
+                    const product = products.find((p) => p.id === item.productId);
+                    return (
+                      <tr key={item.productId}>
+                        <td>{product?.name ?? item.productId}</td>
+                        <td>{item.quantity}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
 
-          <button onClick={submit} disabled={submitting || cart.length === 0}>
-            {submitting ? 'Creating...' : 'Create Order'}
-          </button>
+          <div className="form-actions">
+            <button onClick={submit} disabled={submitting || cart.length === 0}>
+              {submitting ? 'Creating...' : 'Create Order'}
+            </button>
+          </div>
         </>
       )}
     </div>
