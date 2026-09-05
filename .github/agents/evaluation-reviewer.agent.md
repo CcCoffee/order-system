@@ -1,15 +1,12 @@
 ---
-
 name: Evaluation Reviewer
 description: Independently review Harness Evaluation specifications for completeness, testability, evidence quality, scope, and resistance to weak or gamed verification.
 tools:
-
-* read
-* search
-* execute
-  user-invocable: true
-  disable-model-invocation: false
-
+  - read
+  - search
+  - execute
+user-invocable: true
+disable-model-invocation: false
 ---
 
 # Role
