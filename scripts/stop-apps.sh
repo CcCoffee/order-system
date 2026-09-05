@@ -23,7 +23,9 @@ stop_port() {
     local name="$2"
     local pids
 
-    pids="$(lsof -ti tcp:"$port" 2>/dev/null || true)"
+    # Match only sockets in LISTEN state so established client connections
+    # (e.g. a browser) are never selected for termination.
+    pids="$(lsof -ti tcp:"$port" -sTCP:LISTEN 2>/dev/null || true)"
     if [[ -n "$pids" ]]; then
         echo "Stopping $name (port $port): $pids"
         # Intentional word splitting: $pids may hold multiple PIDs.
