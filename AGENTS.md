@@ -32,83 +32,131 @@ Feedback
 Repair
 ```
 
-The repository separates four concerns:
+The repository separates product engineering from Harness engineering.
 
 ```text
 docs/
-    Project knowledge and architectural context
+    Product and system knowledge
 
 .harness/
-    Tasks, evaluations, and verification rules
+    Harness control layer
 
 .github/agents/
     Specialized development agents
 
-src / backend / frontend
+backend/
+frontend/
     Product implementation
+
+scripts/
+    Development, testing, and verification commands
 ```
 
 ---
 
-# 2. Source of Truth
+# 2. Repository Source of Truth
 
 Different repository areas have different responsibilities.
 
 ## docs/
 
-`docs/` is the project's knowledge base.
+`docs/` is the product and system knowledge base.
 
 It describes:
 
-* how the system currently works
+* current architecture
 * API contracts
 * database structure
-* architecture
+* system behavior
 * important architectural decisions
-* Harness usage documentation
 
-Examples:
+Typical structure:
 
 ```text
-docs/architecture/
-docs/api/
-docs/database/
-docs/decisions/
+docs/
+├── architecture/
+├── api/
+├── database/
+└── decisions/
 ```
 
-Agents should read relevant documentation before making changes.
-
-Documentation should reflect the current implementation and architectural decisions.
+Product documentation should reflect the actual implementation.
 
 ---
 
 ## .harness/
 
-`.harness/` is the project's Harness control layer.
+`.harness/` is the Harness control layer.
 
 It contains:
 
-* tasks
-* evaluations
-* verification configuration
-* Harness workflow documentation
-* Harness state when applicable
+* Tasks
+* Evaluations
+* Harness configuration
+* Harness state
+* Harness methodology documentation
 
-The Harness defines:
+Typical structure:
 
-> What must be implemented and what conditions must be satisfied.
+```text
+.harness/
+├── config/
+├── docs/
+├── evaluations/
+├── tasks/
+└── state/
+```
 
-It should not duplicate the general project documentation in `docs/`.
+`.harness/docs/` contains documentation about the Harness itself.
+
+For example:
+
+```text
+.harness/docs/
+├── HARNESS-DEVELOPER-GUIDE.md
+├── HARNESS-QUICK-START.md
+└── HARNESS-EVALUATION-GUIDE.md
+```
+
+Do not mix Harness methodology with normal product documentation.
 
 ---
 
 ## .github/agents/
 
-`.github/agents/` contains specialized GitHub Copilot Custom Agents.
+`.github/agents/` contains GitHub Copilot Custom Agents.
 
 Agents have explicit responsibilities and boundaries.
 
-An Agent should only modify files that are within its assigned responsibility unless the task explicitly requires otherwise.
+An Agent should only modify files within its assigned responsibility unless the task explicitly requires otherwise.
+
+---
+
+## scripts/
+
+`scripts/` contains executable development, test, infrastructure, and verification commands.
+
+Important categories include:
+
+```text
+Infrastructure:
+start-infra.sh
+stop-infra.sh
+reset-infra.sh
+
+Testing:
+integration-test.sh
+e2e.sh
+
+Evaluation:
+run-evaluation.sh
+
+Verification:
+verify.sh
+verify-*.sh
+```
+
+Verification scripts are part of the Harness control system and must be treated as protected engineering artifacts.
 
 ---
 
@@ -139,6 +187,8 @@ The Orchestrator and primary entry point for multi-agent development.
 Responsibilities:
 
 * understand the user requirement
+* identify the applicable Evaluation
+* identify the applicable Task
 * invoke Planner
 * coordinate implementation agents
 * coordinate Test
@@ -171,11 +221,7 @@ Planner must not modify production code.
 
 Planner may propose a new Evaluation when a new important business capability is identified.
 
-However:
-
-> Planner must not unilaterally modify the official `.harness/evaluations/` definitions.
-
-Formal Evaluation changes require explicit human/team approval or an explicitly authorized Harness-maintenance task.
+Planner must not unilaterally modify official Evaluation definitions.
 
 ---
 
@@ -189,11 +235,11 @@ Responsibilities:
 * backend tests
 * database migrations when required
 * backend API implementation
-* backend documentation updates when the implementation changes documented behavior
+* backend documentation updates when implementation changes documented behavior
 
 Backend must follow existing architecture and transaction boundaries.
 
-Backend must not modify Harness evaluation criteria merely to make an implementation pass.
+Backend must not modify Harness acceptance criteria or verification rules merely to make an implementation pass.
 
 ---
 
@@ -209,7 +255,9 @@ Responsibilities:
 * user-facing error/loading states
 * frontend documentation updates when required
 
-Frontend should use the existing API contracts and frontend architecture.
+Frontend should use established API contracts and frontend architecture.
+
+Frontend must not modify Harness acceptance criteria or verification rules merely to make an implementation pass.
 
 ---
 
@@ -225,12 +273,18 @@ Responsibilities:
 * concurrency tests
 * regression tests
 * E2E tests when applicable
-* executing focused verification
-* executing full verification
+* focused verification
+* full verification
 
-Test must not modify production code merely to make tests pass.
+Test must not modify production behavior merely to make tests pass.
 
-Test must not weaken assertions or remove failing tests.
+Test must not:
+
+* weaken assertions
+* delete tests
+* skip failures
+* disable verification
+* modify verification scripts to hide failures
 
 ---
 
@@ -259,7 +313,7 @@ Reviewer should identify problems rather than silently fixing them.
 
 ---
 
-# 5. Multi-Agent Workflow
+# 5. Normal Multi-Agent Workflow
 
 The normal workflow is:
 
@@ -276,7 +330,7 @@ Test
   ↓
 Reviewer
   ↓
-./scripts/verify.sh
+Verification
   ↓
 PASS
 ```
@@ -294,9 +348,9 @@ Repair
   ↓
 Test
   ↓
-Reviewer when appropriate
+Review when appropriate
   ↓
-./scripts/verify.sh
+Verification
   ↓
 PASS
 ```
@@ -304,6 +358,8 @@ PASS
 The Order System Agent is the orchestration root.
 
 Specialized agents should not independently redesign the workflow.
+
+For normal development, users should invoke `Order System` rather than manually invoking every specialized Agent.
 
 ---
 
@@ -389,8 +445,6 @@ Create or extend an Evaluation when a requirement introduces or changes an impor
 * represents an important state transition
 * should be protected against future regression
 
-Do not create a new Evaluation for every small UI or implementation change.
-
 Examples that usually deserve Evaluation:
 
 * order cancellation
@@ -409,21 +463,19 @@ Examples that normally do not:
 
 ---
 
-## Evaluation vs Test
+# 8. Evaluation vs Test vs Verification
 
-Evaluation describes:
+These concepts are related but different.
 
-> What must be true.
+## Evaluation
 
-Tests and verification determine:
+Answers:
 
-> Whether it is true.
+> What must be true?
 
-For example:
+Example:
 
 ```text
-Evaluation:
-
 PENDING orders can be cancelled.
 
 Cancellation must release reserved inventory.
@@ -431,27 +483,58 @@ Cancellation must release reserved inventory.
 Repeated cancellation must not release inventory twice.
 ```
 
-The implementation may use any appropriate design as long as the required behavior is satisfied.
+---
 
-Do not unnecessarily encode implementation details into Evaluations.
+## Test
 
-Prefer:
+Answers:
 
-```text
-What must happen
-```
+> How do we prove a behavior?
 
-over:
+For example:
 
 ```text
-Exactly how the code must be written
+@Test
+void shouldReleaseInventoryWhenCancelOrder() {
+    ...
+}
 ```
 
-unless the implementation detail is itself an explicit architectural requirement.
+Tests provide executable evidence for the Evaluation.
 
 ---
 
-## Evaluation Ownership
+## Verification
+
+Answers:
+
+> Does the repository as a whole satisfy its engineering contract?
+
+The canonical command is:
+
+```bash
+./scripts/verify.sh
+```
+
+Therefore:
+
+```text
+Evaluation
+    ↓
+defines correctness
+
+Tests
+    ↓
+prove specific behavior
+
+verify.sh
+    ↓
+proves the repository satisfies the verification contract
+```
+
+---
+
+# 9. Evaluation Ownership
 
 Formal Evaluations are engineering governance artifacts.
 
@@ -474,67 +557,291 @@ Human / authorized Harness maintenance
   ↓
 Update Evaluation
   ↓
+Review
+  ↓
 Re-run verification
+```
+
+Evaluation changes must represent an intentional change to the engineering contract.
+
+---
+
+# 10. Verification Architecture
+
+Verification is part of the Harness control layer.
+
+The repository uses:
+
+```text
+verify.sh
+```
+
+as the canonical verification entry point.
+
+Individual verification scripts provide focused checks.
+
+Typical structure:
+
+```text
+verify.sh
+    │
+    ├── verify-env.sh
+    ├── verify-structure.sh
+    ├── verify-infrastructure.sh
+    ├── verify-backend.sh
+    ├── verify-frontend.sh
+    ├── verify-api.sh
+    └── verify-architecture.sh
+```
+
+The exact composition may evolve as the project evolves.
+
+---
+
+# 11. Verification Script Ownership
+
+Verification scripts are protected artifacts.
+
+Examples:
+
+```text
+scripts/verify.sh
+scripts/verify-env.sh
+scripts/verify-structure.sh
+scripts/verify-infrastructure.sh
+scripts/verify-backend.sh
+scripts/verify-frontend.sh
+scripts/verify-api.sh
+scripts/verify-architecture.sh
+```
+
+Normal product development must not modify these files merely to make a Task pass.
+
+In particular:
+
+* Backend must not weaken backend verification.
+* Frontend must not weaken frontend verification.
+* Test must not remove verification checks.
+* Reviewer must not silently change verification behavior.
+* Order System must not modify verification rules to avoid a failure.
+
+---
+
+# 12. When Verification Scripts May Be Changed
+
+Verification scripts may be changed when there is a genuine change to the project's engineering contract.
+
+Valid examples include:
+
+### New engineering invariant
+
+A new architectural rule needs deterministic enforcement.
+
+Example:
+
+```text
+Controllers must not directly access repositories.
+```
+
+This may require an update to:
+
+```text
+scripts/verify-architecture.sh
 ```
 
 ---
 
-# 8. Documentation Rules
+### New repository capability
+
+The project gains a new subsystem that requires verification.
+
+For example:
+
+```text
+A new frontend application is introduced.
+```
+
+This may require:
+
+```text
+scripts/verify-frontend.sh
+```
+
+to evolve.
+
+---
+
+### Verification coverage is genuinely incomplete
+
+A critical requirement is repeatedly being verified only through fragile manual inspection.
+
+A deterministic verification rule may be appropriate.
+
+---
+
+### Project architecture changes
+
+If the architecture intentionally changes, corresponding verification rules may need to change.
+
+---
+
+# 13. When Verification Scripts Must NOT Be Changed
+
+Do not modify verification scripts because:
+
+* a product implementation fails
+* a test fails
+* an Agent made a mistake
+* the implementation is inconvenient
+* the existing architecture makes implementation harder
+* a Task is difficult to satisfy
+* `verify.sh` reports a failure
+* a new implementation does not match an existing engineering rule
+
+The default response to verification failure is:
+
+```text
+Fix the implementation
+```
+
+not:
+
+```text
+Change the verification rule
+```
+
+---
+
+# 14. Verification Change Workflow
+
+When an Agent believes a verification rule needs to change:
+
+```text
+Agent
+  ↓
+Identify missing / outdated verification rule
+  ↓
+Explain why the current rule is incorrect or incomplete
+  ↓
+Human / authorized Harness maintainer approves
+  ↓
+Modify verify-*.sh
+  ↓
+Review the Harness change
+  ↓
+Run ./scripts/verify.sh
+  ↓
+PASS
+```
+
+Changing a verification script is itself an engineering change.
+
+It must not be treated as a workaround for a failing product implementation.
+
+---
+
+# 15. `verify.sh` Is the Final Authority
+
+The canonical command is:
+
+```bash
+./scripts/verify.sh
+```
+
+Focused tests may be executed during development.
+
+However:
+
+> A Task is not complete until the canonical verification passes.
+
+The verification result is authoritative.
+
+Do not declare completion when:
+
+* tests pass but `verify.sh` fails
+* Reviewer approves but `verify.sh` fails
+* an Agent claims completion but verification was not executed
+
+Expected final state:
+
+```text
+HARNESS VERIFY: PASS
+```
+
+---
+
+# 16. Failure Handling
+
+When verification fails:
+
+1. Read the failure carefully.
+2. Identify the failed verification.
+3. Identify the affected requirement or Evaluation.
+4. Determine whether the implementation is wrong.
+5. Determine whether the test is wrong.
+6. Determine whether documentation is stale.
+7. Determine whether the verification rule itself is genuinely incorrect.
+8. Fix the actual problem.
+9. Re-run relevant tests.
+10. Re-run `./scripts/verify.sh`.
+
+The default assumption is:
+
+> The implementation is wrong until evidence shows that the verification rule itself is wrong.
+
+---
+
+# 17. Documentation Rules
 
 Documentation is part of the engineering system.
 
-When implementation changes documented system behavior, the relevant documentation must be updated in the same change.
+When implementation changes documented system behavior, relevant documentation must be updated.
 
 ## API changes
 
-If API behavior changes, update:
+Update relevant documentation under:
 
 ```text
-docs/api/openapi.yaml
+docs/api/
 ```
 
-when applicable.
+when API behavior changes.
 
 ---
 
 ## Database changes
 
-If the database schema or important database behavior changes, update:
+Update relevant documentation under:
 
 ```text
-docs/database/schema.md
+docs/database/
 ```
 
-when applicable.
+when schema or important database behavior changes.
 
 ---
 
 ## Architecture changes
 
-If the system architecture changes, update the relevant:
+Update relevant documentation under:
 
 ```text
 docs/architecture/
 ```
 
-documentation.
+when system architecture changes.
 
 ---
 
 ## Architectural decisions
 
-When an important architectural decision is made, add or update an ADR under:
+Important architectural decisions should be documented under:
 
 ```text
 docs/decisions/
 ```
 
-ADR should explain:
-
-* the problem
-* the decision
-* alternatives considered when useful
-* consequences
+Use ADRs for decisions with meaningful long-term consequences.
 
 Do not create ADRs for trivial implementation choices.
 
@@ -542,33 +849,39 @@ Do not create ADRs for trivial implementation choices.
 
 ## Harness documentation
 
-The following documents describe Harness itself:
+Harness methodology belongs under:
 
 ```text
-docs/HARNESS-QUICK-START.md
-docs/HARNESS-EVALUATION-GUIDE.md
+.harness/docs/
 ```
 
-They should only be changed when the team's Harness methodology changes.
+Examples:
 
-Normal product development should not modify them.
+```text
+.harness/docs/HARNESS-DEVELOPER-GUIDE.md
+.harness/docs/HARNESS-QUICK-START.md
+.harness/docs/HARNESS-EVALUATION-GUIDE.md
+```
+
+Normal product development should not modify these documents unless the Harness methodology itself changes.
 
 ---
 
-# 9. Documentation Ownership
+# 18. Documentation Ownership
 
-The following ownership model is recommended:
+Recommended ownership:
 
-| Area                    | Primary owner             |
-| ----------------------- | ------------------------- |
-| `docs/api/`             | Backend / team            |
-| `docs/database/`        | Backend / team            |
-| `docs/architecture/`    | Engineering team          |
-| `docs/decisions/`       | Human / Tech Lead         |
-| `docs/HARNESS-*`        | Harness maintainer / team |
-| `.harness/evaluations/` | Human / team              |
-| `.harness/tasks/`       | Planner / task author     |
-| `scripts/verify.sh`     | Harness maintainer / team |
+| Area                    | Primary Owner              |
+| ----------------------- | -------------------------- |
+| `docs/api/`             | Backend / Engineering Team |
+| `docs/database/`        | Backend / Engineering Team |
+| `docs/architecture/`    | Engineering Team           |
+| `docs/decisions/`       | Human / Tech Lead          |
+| `.harness/docs/`        | Harness Maintainer / Team  |
+| `.harness/evaluations/` | Human / Authorized Team    |
+| `.harness/tasks/`       | Task Author / Team         |
+| `scripts/verify-*.sh`   | Harness Maintainer / Team  |
+| `scripts/verify.sh`     | Harness Maintainer / Team  |
 
 Agents may update implementation-related documentation when required by their changes.
 
@@ -576,7 +889,7 @@ Agents should not silently change architectural decisions or Harness governance.
 
 ---
 
-# 10. Engineering Principles
+# 19. Engineering Principles
 
 Prefer:
 
@@ -603,7 +916,7 @@ Before introducing a new abstraction, verify that the existing architecture cann
 
 ---
 
-# 11. Backend Rules
+# 20. Backend Rules
 
 Follow the existing backend architecture.
 
@@ -641,7 +954,7 @@ Database modifications must consider:
 
 ---
 
-# 12. Frontend Rules
+# 21. Frontend Rules
 
 Follow the existing React architecture.
 
@@ -661,11 +974,11 @@ Important UI flows should handle:
 * error
 * retry when appropriate
 
-Frontend should consume the established API contract rather than independently inventing request/response structures.
+Frontend should consume established API contracts rather than independently inventing request/response structures.
 
 ---
 
-# 13. Testing Rules
+# 22. Testing Rules
 
 Tests are part of the product contract.
 
@@ -694,53 +1007,34 @@ If the test itself is genuinely incorrect, explain why before changing it.
 
 ---
 
-# 14. Harness Protection Rules
+# 23. Harness Protection Rules
 
 The following are protected Harness artifacts:
 
 ```text
 .harness/evaluations/
 .harness/tasks/
+.harness/config/
+.harness/docs/
 scripts/verify.sh
+scripts/verify-*.sh
 ```
 
-Do not modify them merely to make an implementation pass.
+Protection means:
 
-A product implementation must adapt to the established acceptance criteria.
+> These files must not be changed merely to make a product implementation pass.
 
-Harness definitions may only be changed when the task explicitly concerns the Harness or when an approved requirement intentionally changes the contract.
+A Harness artifact may be changed when the task explicitly concerns Harness behavior or when an approved engineering change requires it.
 
-Harness changes are engineering changes and must themselves be reviewed and verified.
+Harness changes must themselves be:
+
+* reviewed
+* tested where applicable
+* verified
 
 ---
 
-# 15. Verification
-
-The canonical verification command is:
-
-```bash
-./scripts/verify.sh
-```
-
-Focused tests may be executed during development.
-
-However:
-
-> A task is not complete until the canonical verification passes.
-
-The verification result is authoritative.
-
-Expected final state:
-
-```text
-HARNESS VERIFY: PASS
-```
-
-Do not claim a task is complete when verification has not been executed or has failed.
-
----
-
-# 16. Definition of Done
+# 24. Definition of Done
 
 A feature is complete only when:
 
@@ -755,44 +1049,23 @@ Expected final state:
 
 ```text
 Implementation
-    +
+      +
 Tests
-    +
+      +
 Documentation
-    +
+      +
 Review
-    +
+      +
 Evaluation
-    +
+      +
 Verification
-    =
+      =
 DONE
 ```
 
 ---
 
-# 17. Failure Handling
-
-When verification fails, do not immediately change the verification criteria.
-
-First determine:
-
-1. What failed?
-2. Which Evaluation or requirement is affected?
-3. Is the implementation wrong?
-4. Is the test wrong?
-5. Is the documentation stale?
-6. Is there a genuine Harness definition problem?
-
-The default assumption is:
-
-> Fix the implementation before changing the acceptance criteria.
-
-Only change Harness definitions when the requirement or engineering contract has intentionally changed.
-
----
-
-# 18. Keep Harness Simple
+# 25. Keep Harness Simple
 
 This project intentionally does not use:
 
@@ -806,57 +1079,64 @@ The primary goal is:
 
 > reliable functional and engineering verification.
 
-Harness should remain small enough that developers understand it and agents can reliably operate within it.
+Prefer deterministic verification over subjective scoring.
 
-Prefer deterministic verification over subjective scoring whenever possible.
+Do not introduce additional scoring systems unless there is a clear engineering need.
 
 ---
 
-# 19. Final Mental Model
+# 26. Final Mental Model
 
-The repository can be understood as four layers:
+The system can be understood as:
 
 ```text
-┌──────────────────────────────────────────┐
-│ Requirement                              │
-│ What does the user want?                 │
-└────────────────────┬─────────────────────┘
-                     ↓
-┌──────────────────────────────────────────┐
-│ docs/                                    │
-│ How does the system work?                │
-│ Why was it designed this way?             │
-└────────────────────┬─────────────────────┘
-                     ↓
-┌──────────────────────────────────────────┐
-│ .harness/                                │
-│ What must be true?                       │
-│ How do we verify it?                     │
-└────────────────────┬─────────────────────┘
-                     ↓
-┌──────────────────────────────────────────┐
-│ Agents + Code                            │
-│ How should we implement it?              │
-└────────────────────┬─────────────────────┘
-                     ↓
-┌──────────────────────────────────────────┐
-│ Verification                             │
-│ Did we actually do it correctly?         │
-└──────────────────────────────────────────┘
+                 REQUIREMENT
+                      │
+                      ↓
+              ┌───────────────┐
+              │     TASK      │
+              │ What to build │
+              └───────┬───────┘
+                      ↓
+              ┌───────────────┐
+              │  EVALUATION   │
+              │ What is right │
+              └───────┬───────┘
+                      ↓
+              ┌───────────────┐
+              │     AGENTS    │
+              │ How to build  │
+              └───────┬───────┘
+                      ↓
+              ┌───────────────┐
+              │     TESTS     │
+              │ Prove behavior│
+              └───────┬───────┘
+                      ↓
+              ┌───────────────┐
+              │  VERIFY.SH    │
+              │ Final judge   │
+              └───────┬───────┘
+                      ↓
+                 PASS / FAIL
 ```
 
 Remember:
 
-> **Requirement defines what is wanted.**
-
-> **docs explain what the system is and why it works that way.**
-
-> **Planner determines how the requirement can be implemented.**
+> **Task defines what needs to be done now.**
 
 > **Evaluation defines what correct behavior means.**
 
-> **Agents implement the change.**
+> **Planner determines an evidence-based implementation approach.**
 
-> **Tests and verification prove whether the change is correct.**
+> **Backend / Frontend implement the change.**
 
-> **The Harness prevents the implementation process from drifting away from the engineering contract.**
+> **Test provides executable evidence.**
+
+> **Reviewer independently checks the implementation.**
+
+> **verify.sh is the final authority.**
+
+> **Verification scripts are part of the Harness and must not be weakened to make a Task pass.**
+
+> **When verification fails, fix the product before changing the judge.**
