@@ -46,17 +46,61 @@ Evaluation has passed.
 8. Inspect existing tests before adding new tests.
 9. Identify missing or insufficient coverage.
 10. Add deterministic tests where required.
-11. Execute the relevant tests.
+11. Execute only the relevant tests first (the smallest sufficient scope).
 12. Verify that the tests actually exercise the required behavior.
-13. Run `./scripts/verify.sh`.
-14. Produce an explicit Evaluation Evidence Matrix.
-15. Report every remaining gap.
+13. Iterate on the relevant tests until the relevant suite is green.
+14. Run `./scripts/verify.sh` once as the final repository gate, not after
+    every test addition.
+15. Produce an explicit Evaluation Evidence Matrix.
+16. Report every remaining gap.
 
 Backend Maven verification is the `verify` lifecycle (`mvn verify`), which
 runs the backend test suite and the repository Checkstyle configuration
 together.
 
+--Verification Iteration
+
+Do not run `./scripts/verify.sh` after every test you add.
+
+Use this loop:
+
+```text
+Inspect
+    ↓
+Add / update relevant tests
+    ↓
+Run relevant tests
+    ↓
+Fix missing coverage
+    ↓
+Run the relevant suite
+    ↓
+Final: ./scripts/verify.sh (once)
+```
+
+The full `./scripts/verify.sh` is the final gate, not the per-test feedback
+loop.
+
 ---
+
+# Playwright Usage (Test vs Frontend)
+
+You may use Playwright, but for formal evidence, not design iteration.
+
+Your Playwright purpose:
+
+- formal E2E
+- acceptance evidence
+- regression
+- reproducible verification
+
+The Frontend agent uses Playwright for development-time inspection,
+screenshots, and visual iteration. Do not take over that role, and do not
+replace formal assertions with screenshots.
+
+---
+
+# -
 
 # Evaluation Evidence Is Mandatory
 

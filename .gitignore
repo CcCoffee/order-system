@@ -89,5 +89,5 @@ __pycache__/
 venv/
 *.egg-info/
 
-*/.playwright-cli/
-*/.playwright/
+**/.playwright-cli/
+**/.playwright/

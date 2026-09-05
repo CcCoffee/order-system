@@ -22,6 +22,14 @@ echo "Run npm ci inside frontend/."
 exit 1
 fi
 
+echo "Running frontend lint (typecheck)..."
+
+npm run lint
+
+echo "Running frontend unit tests..."
+
+npm run test
+
 echo "Running frontend build..."
 
 npm run build

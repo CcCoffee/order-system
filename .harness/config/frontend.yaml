@@ -1,0 +1,18 @@
+# Frontend Harness configuration.
+#
+# Visual verification mode controls the Frontend agent's development-time
+# screenshot feedback loop. Resolution order (highest wins):
+#
+#   1. environment variable FRONTEND_VISUAL_MODE (auto | always | never)
+#   2. visual_verification.mode below
+#   3. default: auto
+#
+# Semantics:
+#   auto   - screenshot only when the current model can actually inspect images;
+#            otherwise fall back to structural browser inspection.
+#   always - screenshot visual feedback is required; if the model cannot inspect
+#            images, report "Visual Verification unavailable".
+#   never  - no screenshot feedback; always use structural browser inspection.
+
+visual_verification:
+  mode: auto
