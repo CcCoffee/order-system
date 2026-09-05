@@ -195,14 +195,16 @@ project/
 │   │   ├── 002-order-cancellation.md
 │   │   ├── 003-inventory-concurrency.md
 │   │   ├── 004-order-idempotency.md
-│   │   └── 005-regression.md
+│   │   ├── 005-web-ui-design-language.md
+│   │   └── 006-regression.md
 │   │
 │   ├── tasks/
 │   │   ├── 001-order-system-mvp.prompt.md
 │   │   ├── 002-order-cancellation.prompt.md
 │   │   ├── 003-inventory-concurrency.prompt.md
 │   │   ├── 004-order-idempotency.prompt.md
-│   │   └── 005-regression.prompt.md
+│   │   ├── 005-web-ui-design-language.prompt.md
+│   │   └── 006-regression.prompt.md
 │   │
 │   └── state/
 │
@@ -1023,7 +1025,8 @@ HARNESS VERIFY: PASS
 002-order-cancellation.md
 003-inventory-concurrency.md
 004-order-idempotency.md
-005-regression.md
+005-web-ui-design-language.md
+006-regression.md
 ```
 
 形成一套逐步增强的工程约束。
@@ -1335,8 +1338,12 @@ evaluations:
     file: .harness/evaluations/004-order-idempotency.md
 
   - id: 005
+    name: web-ui-design-language
+    file: .harness/evaluations/005-web-ui-design-language.md
+
+  - id: 006
     name: regression
-    file: .harness/evaluations/005-regression.md
+    file: .harness/evaluations/006-regression.md
 
 verification:
   command: ./scripts/verify.sh

@@ -233,7 +233,7 @@ Evaluation A    Evaluation B
 ```text
 002-order-cancellation
 003-inventory-concurrency
-005-regression
+006-regression
 ```
 
 约束。
@@ -518,19 +518,21 @@ Evaluation 不应该随着需求完成就删除。
     ├── 002-order-cancellation.md
     ├── 003-inventory-concurrency.md
     ├── 004-order-idempotency.md
-    └── 005-regression.md
+    ├── 005-web-ui-design-language.md
+    └── 006-regression.md
 ```
 
-这 5 个文件不是 5 个需求。
+这 6 个文件不是 6 个需求。
 
-而是 5 个重要的系统能力：
+而是 6 个重要的系统能力：
 
 ```text
 001 订单系统基本能力
 002 订单取消
 003 库存并发安全
 004 订单幂等
-005 回归保护
+005 网页 UI 设计语言
+006 回归保护
 ```
 
 这种规模是健康的。

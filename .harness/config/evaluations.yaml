@@ -16,8 +16,12 @@ evaluations:
     file: .harness/evaluations/004-order-idempotency.md
 
   - id: 005
+    name: web-ui-design-language
+    file: .harness/evaluations/005-web-ui-design-language.md
+
+  - id: 006
     name: regression
-    file: .harness/evaluations/005-regression.md
+    file: .harness/evaluations/006-regression.md
 
 verification:
   command: ./scripts/verify.sh

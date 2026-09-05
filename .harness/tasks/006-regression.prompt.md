@@ -1,11 +1,11 @@
-# Task 005 — Regression Verification
+# Task 006 — Regression Verification
 
 Read:
 
 - AGENTS.md
 - .github/instructions/
 - .github/agents/order-system.agent.md
-- .harness/evaluations/005-regression.md
+- .harness/evaluations/006-regression.md
 
 Run the complete Harness verification suite.
 
