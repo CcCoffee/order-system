@@ -56,6 +56,8 @@ Evaluation Review
     ↓
 Planner
     ↓
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+    ↓
 Implementation
     ↓
 Test
@@ -261,13 +263,46 @@ Expected Evidence
 Test / Verification
 ```
 
+The Planner must persist the final plan as the canonical Harness artifact:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
 Do not begin implementation before the plan is sufficiently clear.
+
+---
+
+# Phase 4.5 — Plan Artifact Handoff
+
+After the Planner completes, confirm the plan artifact was actually persisted
+before delegating any implementation agent.
+
+1. Confirm the Planner created the corresponding `.harness/plans/*.plan.md`.
+2. Confirm the Plan corresponds to the current Evaluation.
+3. Confirm the Plan corresponds to the current Task.
+4. Confirm the Plan file exists and is not empty.
+
+Only then call Backend / Frontend / Test.
+
+Pass the plan path as the formal input to the downstream agents.
+
+If the Planner completed analysis but did NOT create the required Plan artifact:
+
+```text
+Planner completed analysis but failed to persist the required Plan artifact.
+Implementation agents must not proceed.
+```
+
+Do not continue to Backend / Frontend / Test, and do not rely on Copilot Chat
+session history or internal VS Code `workspaceStorage/chat-session-resources`
+as a substitute for the persisted Plan.
 
 ---
 
 # Phase 5 — Implementation
 
-Based on the approved plan:
+Based on the approved, persisted Plan:
 
 If backend changes are required:
 
@@ -282,6 +317,9 @@ Delegate to:
 Frontend
 
 If only one side is affected, do not invoke the unnecessary agent.
+
+Provide the persisted plan path (`.harness/plans/*.plan.md`) to each
+implementation agent as its formal input.
 
 Keep implementation agents within their defined scopes.
 
@@ -301,6 +339,7 @@ Test
 The Test agent must:
 
 - read the Evaluation
+- read the persisted implementation plan from `.harness/plans/`
 - enumerate every Acceptance Criterion
 - inspect existing tests
 - identify missing evidence
@@ -332,6 +371,7 @@ Reviewer must independently inspect:
 - tests
 - Evaluation
 - Acceptance Criteria
+- the persisted implementation plan
 - Evaluation Evidence Matrix
 - architecture
 - transaction behavior
@@ -484,7 +524,8 @@ The task is complete only when ALL of the following are true:
 1. Applicable Evaluation exists.
 2. Evaluation Reviewer approved the Evaluation.
 3. `./scripts/verify-evaluations.sh` passes.
-4. Planner produced a plan consistent with the Evaluation.
+4. Planner produced a plan consistent with the Evaluation and persisted it
+   under `.harness/plans/<evaluation-id>-<task-slug>.plan.md`.
 5. Required implementation is complete.
 6. Test produced meaningful evidence for every Acceptance Criterion.
 7. Reviewer approved the implementation and evidence.

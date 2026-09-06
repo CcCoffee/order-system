@@ -64,6 +64,7 @@ verify.sh
 ├── config/
 ├── docs/
 ├── evaluations/
+├── plans/
 ├── tasks/
 └── state/
 
@@ -85,6 +86,8 @@ scripts/
 | `docs/` | 产品和系统知识 |
 | `.harness/evaluations/` | 定义什么叫“正确” |
 | `.harness/tasks/` | 定义当前要完成什么 |
+| `.harness/plans/` | Planner 输出实现计划的规范持久化位置 |
+| `.harness/state/` | 当前执行状态索引 |
 | `.harness/docs/` | Harness 使用和方法论 |
 | `.github/agents/` | 定义不同 Agent 的职责 |
 | `.github/instructions/` | 针对特定目录/文件的开发规则 |
@@ -111,6 +114,63 @@ Agent
 verify.sh
     = 最后怎么判断做对了
 ```
+
+---
+
+### Artifact hierarchy
+
+Harness 的产物（Artifact）遵循明确的层级：
+
+```text
+Evaluation
+    ↓
+Task
+    ↓
+Plan
+    ↓
+Implementation
+    ↓
+Evidence
+```
+
+定义：
+
+```text
+Evaluation    = WHAT must be true（什么必须成立）
+Task          = WHAT needs to be changed（这次要改什么）
+Plan          = HOW the repository should be changed（仓库应如何变更）
+Implementation = actual code changes（实际代码变更）
+Evidence       = proof that Evaluation is satisfied（证明 Evaluation 被满足）
+```
+
+### Plan 是规范持久化产物
+
+Planner 输出的最终 Implementation Plan 必须写入：
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+例如：
+
+```text
+Evaluation: .harness/evaluations/002-order-cancellation.md
+Task:       .harness/tasks/002-order-cancellation.prompt.md
+Plan:       .harness/plans/002-order-cancellation.plan.md
+```
+
+`.harness/plans/` 是 Planner 输出的规范（canonical）位置。
+
+以下内容 **不是** Harness 产物，不得作为后续 Agent 的正式上下文依赖：
+
+> Copilot Chat history is not a Harness artifact.
+
+> VS Code `workspaceStorage/chat-session-resources` is not a Harness artifact.
+
+> `.harness/plans/` is the canonical location for Planner output.
+
+`.harness/state/current-task.yaml` 只是当前执行状态索引，只保存对 Plan 的引用，
+不复制 Plan 内容。
 
 ---
 

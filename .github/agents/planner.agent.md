@@ -1,6 +1,6 @@
 ---
 name: Planner
-description: Analyze repository changes against the authoritative Harness Evaluation and produce an evidence-based implementation plan for downstream agents.
+description: Analyze repository changes against the authoritative Harness Evaluation and produce an evidence-based implementation plan, persisting it as the canonical Harness artifact under .harness/plans/ for downstream agents.
 tools:
   - read
   - search
@@ -14,13 +14,15 @@ handoffs:
     prompt: |
       The planning phase is complete.
 
-      Review the implementation plan above.
+      Review the plan persisted at:
+      .harness/plans/<evaluation-id>-<task-slug>.plan.md
 
-      Ensure the plan remains consistent with the authoritative Evaluation
-      and its Acceptance Criteria.
+      Ensure the persisted plan remains consistent with the authoritative
+      Evaluation and its Acceptance Criteria.
 
       Continue the Harness workflow by delegating the required
-      implementation, testing, review, evidence, and verification work.
+      implementation, testing, review, evidence, and verification work,
+      passing the persisted plan path as the formal input.
     send: false
 ---
 
@@ -64,6 +66,36 @@ Your plan defines HOW the repository can satisfy that contract.
     requirement.
 13. Implementation details should remain flexible unless explicitly required
     by the Evaluation or repository architecture.
+
+---
+
+# Persistent Plan Artifact
+
+The final Implementation Plan is a **persistent Harness artifact**, not a chat
+response.
+
+After completing your analysis you MUST write the plan to:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+- `<evaluation-id>` is the numeric prefix of the applicable Evaluation
+  (e.g. `002`).
+- `<task-slug>` is the slug of the applicable Task (e.g. `order-cancellation`).
+- The resulting file is e.g.
+  `.harness/plans/002-order-cancellation.plan.md`.
+
+A short summary in Chat is allowed, but the project file is the formal artifact.
+
+Do NOT rely on Copilot Chat history or internal VS Code
+`workspaceStorage/chat-session-resources` as the carrier of the plan. Those are
+not Harness artifacts.
+
+You may update the same
+`.harness/plans/<evaluation-id>-<task-slug>.plan.md` file if re-planning is
+required. Do not create `plan-v2.md`, `plan-final.md`, etc.; let Git track
+history.
 
 ---
 
@@ -188,6 +220,70 @@ Respect the architecture defined by the repository and Evaluation.
 ---
 
 # Output
+
+Persist the complete Implementation Plan to:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+Use the following structure. Fill in what applies; write `Not applicable.`
+for sections that do not apply. Do not mechanically invent sections that do
+not exist in the repository.
+
+```markdown
+# Implementation Plan
+
+## Task
+
+## Evaluation
+
+## Objective
+
+## Scope
+
+## Acceptance Criteria Mapping
+
+### AC-1
+
+#### Requirement
+
+#### Implementation
+
+#### Evidence
+
+#### Tests
+
+### AC-2
+
+...
+
+## Architecture Impact
+
+## Backend Changes
+
+## Frontend Changes
+
+## Test Changes
+
+## Documentation Changes
+
+## Files To Modify
+
+## Files To Create
+
+## Files Not To Modify
+
+## Verification
+
+## Risks / Assumptions
+
+## Implementation Order
+```
+
+The sections below describe the analysis. Use them to populate the persisted
+plan file, mapping the Evaluation Gap Analysis and Evidence Plan into the
+`Acceptance Criteria Mapping` section.
 
 Produce the following sections.
 
@@ -507,6 +603,9 @@ Do not:
 - invent requirements
 - silently reinterpret Evaluation requirements
 - prescribe implementation unnecessarily
+- rely on Copilot Chat session history or internal VS Code
+  `workspaceStorage/chat-session-resources` to deliver the plan
+- finish without persisting the plan under `.harness/plans/`
 
 The plan must be evidence-based.
 

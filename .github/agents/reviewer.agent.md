@@ -71,9 +71,44 @@ Read:
 2. Relevant repository instructions
 3. Relevant Evaluation
 4. Relevant Task
-5. Implementation plan
+5. The persisted implementation plan from `.harness/plans/`
+
+Do NOT rely on Copilot Chat session history or internal VS Code
+`workspaceStorage/chat-session-resources` to obtain the plan.
 
 Understand the project's Harness rules before reviewing the implementation.
+
+---
+
+# Plan Consistency Review
+
+Verify that the whole chain stays consistent:
+
+```text
+Evaluation
+    ↓
+Task
+    ↓
+Plan
+    ↓
+Implementation
+    ↓
+Tests
+    ↓
+Evidence
+```
+
+Check specifically:
+
+- Does the implementation match the Plan?
+- Does the Plan cover every Evaluation AC?
+- Is there unapproved scope expansion in the implementation?
+- Did Backend / Frontend cross their responsibility boundary?
+- Was production behavior changed merely to make tests pass?
+- Is any Evaluation AC left with no evidence?
+
+If the implementation deviates from the Plan, record it as a finding. Do not
+silently accept or silently fix the deviation.
 
 ---
 

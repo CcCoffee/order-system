@@ -56,6 +56,7 @@ Responsibilities:
 - analyze requirements
 - identify affected components
 - create implementation plan
+- persist the final plan under `.harness/plans/`
 - define acceptance criteria
 - define verification strategy
 
@@ -147,6 +148,8 @@ Order System
   ↓
 Planner
   ↓
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+  ↓
 Backend / Frontend
   ↓
 Test
@@ -177,11 +180,16 @@ Order System identifies:
 
 ## Step 3
 
-Planner analyzes the repository.
+Planner analyzes the repository and persists the implementation plan to:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
 
 ## Step 4
 
-Order System delegates implementation.
+Order System confirms the persisted plan artifact exists and delegates
+implementation, passing the plan path as the formal input.
 
 ## Step 5
 
@@ -235,8 +243,13 @@ Agents must not modify the following merely to make a task pass:
 
 - .harness/evaluations/
 - .harness/tasks/
+- .harness/plans/
 - scripts/verify.sh
 - verification criteria
+
+Only the Planner may revise a plan under `.harness/plans/`, and it must do so
+in place (Git tracks history). Implementation agents report conflicts rather
+than rewriting the plan.
 
 Tests must not be weakened.
 

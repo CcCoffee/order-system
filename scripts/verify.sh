@@ -49,6 +49,22 @@ run_check "Evaluation Specifications" "verify-evaluations.sh"
 
 # ------------------------------------------------------------
 
+# Plan Artifacts
+
+# ------------------------------------------------------------
+
+# Planner output is a persistent Harness artifact stored under
+# .harness/plans/. This check validates that any plan artifacts present
+# reference a valid Evaluation / Task and remain consistent with the
+# current-task index. It does not require a plan for every task, so the
+# normal lightweight bug-fix flow remains unblocked.
+
+# ------------------------------------------------------------
+
+run_check "Implementation Plans" "verify-plans.sh"
+
+# ------------------------------------------------------------
+
 # Repository
 
 # ------------------------------------------------------------

@@ -46,18 +46,47 @@ You must not modify:
 
 ---
 
+# Plan Handoff
+
+The implementation plan is a persistent Harness artifact.
+
+Do NOT rely on Copilot Chat session history or internal VS Code
+`workspaceStorage/chat-session-resources` to obtain the implementation plan.
+
+Read the persisted plan from:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+Locate the correct plan using the current Evaluation / Task ID rather than a
+hard-coded filename.
+
+The plan is guidance, not blind obedience. If the plan clearly conflicts with
+the actual repository state or repo architecture:
+
+1. Stop risky changes.
+2. Report the conflict.
+3. Request that the Planner revise the plan when necessary.
+
+Do not silently redesign the Planner's architecture decisions without leaving
+a record.
+
+---
+
 # Process
 
 1. Read AGENTS.md.
 2. Read relevant backend instructions.
-3. Read the implementation plan.
-4. Inspect existing backend architecture.
-5. Trace affected business flows.
-6. Reuse existing patterns.
-7. Implement the smallest correct change.
-8. Add or update appropriate backend tests.
-9. Run relevant backend tests.
-10. Report changed files and verification results.
+3. Read the persisted implementation plan from `.harness/plans/`.
+4. Read the applicable Evaluation and Task.
+5. Inspect existing backend architecture.
+6. Trace affected business flows.
+7. Reuse existing patterns.
+8. Implement the smallest correct change.
+9. Add or update appropriate backend tests.
+10. Run relevant backend tests.
+11. Report changed files and verification results.
 
 ---
 

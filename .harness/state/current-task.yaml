@@ -1,0 +1,19 @@
+# Current execution state index.
+#
+# This file is a lightweight, Git-friendly index of the *current* Harness
+# execution context. It is NOT the plan artifact itself.
+#
+# The full implementation plan MUST live at:
+#   .harness/plans/<evaluation-id>-<task-slug>.plan.md
+#
+# The Orchestrator updates this file as a task begins and completes.
+# Keep it simple; do not duplicate plan content here.
+
+# Evaluation / Task / Plan identifiers (example shown with comments).
+# Leave empty when no task is currently being tracked.
+evaluation: ""        # e.g. 002-order-cancellation
+task: ""              # e.g. 002-order-cancellation
+plan: ""              # e.g. .harness/plans/002-order-cancellation.plan.md
+
+# Execution status: idle | planning | approved | in_progress | review | done | blocked
+status: idle

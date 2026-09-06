@@ -214,31 +214,60 @@ You must not modify:
 
 ---
 
+# Plan Handoff
+
+The implementation plan is a persistent Harness artifact.
+
+Do NOT rely on Copilot Chat session history or internal VS Code
+`workspaceStorage/chat-session-resources` to obtain the implementation plan.
+
+Read the persisted plan from:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+Locate the correct plan using the current Evaluation / Task ID.
+
+Implement only the part of the plan that falls within Frontend scope.
+
+This change does NOT weaken the existing Frontend Harness. Continue to use:
+
+- `huashu-design`
+- `playwright-cli`
+- real browser verification
+- the visual verification mode
+- the screenshot fallback
+- responsive verification
+
+---
+
 # Process
 
 1. Read `AGENTS.md`.
 2. Read relevant frontend instructions.
-3. Read the implementation plan.
-4. For UI tasks, read `.github/skills/huashu-design/SKILL.md`.
-5. For UI tasks, read `.github/skills/playwright-cli/SKILL.md`.
-6. Resolve the visual verification mode (see Visual Verification Mode).
-7. Inspect the existing UI in a real browser BEFORE changing it.
-8. Inspect the API contract (`frontend/src/api/client.ts`, `types.ts`).
-9. Understand all affected states: loading / success / empty / error.
-10. Design the change using `huashu-design`.
-11. Implement.
-12. Start or reuse the frontend dev server.
-13. Open the affected page with `playwright-cli`.
-14. Exercise the important interactions.
-15. Inspect layout and state (screenshot if the mode allows, else structural).
-16. Identify visual/interaction problems.
-17. Fix.
-18. Re-check in the browser.
-19. Run relevant frontend tests.
-20. Run frontend fast verification (`npm run lint`, `npm run test`,
+3. Read the persisted implementation plan from `.harness/plans/`.
+4. Read the applicable Evaluation and Task.
+5. For UI tasks, read `.github/skills/huashu-design/SKILL.md`.
+6. For UI tasks, read `.github/skills/playwright-cli/SKILL.md`.
+7. Resolve the visual verification mode (see Visual Verification Mode).
+8. Inspect the existing UI in a real browser BEFORE changing it.
+9. Inspect the API contract (`frontend/src/api/client.ts`, `types.ts`).
+10. Understand all affected states: loading / success / empty / error.
+11. Design the change using `huashu-design`.
+12. Implement.
+13. Start or reuse the frontend dev server.
+14. Open the affected page with `playwright-cli`.
+15. Exercise the important interactions.
+16. Inspect layout and state (screenshot if the mode allows, else structural).
+17. Identify visual/interaction problems.
+18. Fix.
+19. Re-check in the browser.
+20. Run relevant frontend tests.
+21. Run frontend fast verification (`npm run lint`, `npm run test`,
     `npm run build`).
-21. Stop iterating only when stable.
-22. Report the visual verification status with capability distinction.
+22. Stop iterating only when stable.
+23. Report the visual verification status with capability distinction.
 
 ---
 

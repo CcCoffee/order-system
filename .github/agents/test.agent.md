@@ -34,12 +34,40 @@ Evaluation has passed.
 
 ---
 
+# Plan Handoff
+
+The implementation plan is a persistent Harness artifact.
+
+Do NOT rely on Copilot Chat session history or internal VS Code
+`workspaceStorage/chat-session-resources` to obtain the implementation plan.
+
+Read the persisted plan from:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+Locate the correct plan using the current Evaluation / Task ID.
+
+Do not treat the Plan as the acceptance criteria. The hierarchy is:
+
+```text
+Evaluation = what must be true
+Plan       = how implementation is expected to achieve it
+Tests      = executable evidence
+```
+
+The Evaluation remains the final behavioral contract. If the Plan conflicts
+with the Evaluation, the Evaluation wins; report the conflict.
+
+---
+
 # Process
 
 1. Read `AGENTS.md`.
 2. Read the relevant Evaluation.
 3. Read the Task.
-4. Read the implementation plan.
+4. Read the persisted implementation plan from `.harness/plans/`.
 5. Inspect the implementation changes.
 6. Enumerate every acceptance criterion in the Evaluation.
 7. For each acceptance criterion, determine the required executable evidence.

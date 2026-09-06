@@ -92,6 +92,7 @@ It contains:
 
 * Tasks
 * Evaluations
+* Plans
 * Harness configuration
 * Harness state
 * Harness methodology documentation
@@ -103,6 +104,7 @@ Typical structure:
 ├── config/
 ├── docs/
 ├── evaluations/
+├── plans/
 ├── tasks/
 └── state/
 ```
@@ -216,6 +218,7 @@ Responsibilities:
 * identify documentation changes
 * identify relevant Evaluations
 * define machine-verifiable acceptance criteria
+* persist the final implementation plan under `.harness/plans/`
 
 Planner must not modify production code.
 
@@ -390,6 +393,15 @@ The plan should distinguish:
 * what already exists
 * what needs to change
 * what must remain unchanged
+
+The final plan must be persisted as a Harness artifact:
+
+```text
+.harness/plans/<evaluation-id>-<task-slug>.plan.md
+```
+
+Planner output is a project-level, Git-tracked, cross-agent artifact. It is not a
+Copilot Chat session resource.
 
 Avoid speculative implementation.
 
